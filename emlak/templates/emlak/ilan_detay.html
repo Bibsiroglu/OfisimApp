@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>İlan Detay: {{ ilan.ilan_no }}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        .detay-kutu {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .baslik {
+            background-color: #e9ecef;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .bilgi-satiri {
+            margin-bottom: 5px;
+            border-bottom: 1px dotted #eee;
+            padding-bottom: 3px;
+        }
+
+        .bilgi-satiri strong {
+            display: inline-block;
+            width: 180px;
+        }
+
+        .durum-aktif {
+            color: green;
+        }
+
+        .durum-satildi {
+            color: red;
+        }
+
+        .durum-bekle {
+            color: orange;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏠 İlan Detay: {{ ilan.ilan_no }}</h1>
+    <h2>{{ ilan.il }} / {{ ilan.ilce }} - {{ ilan.mahalle }}</h2>
+
+    <p><a href="{% url 'ilan_listesi' %}">← İlan Listesine Geri Dön</a> |
+        <a href="/admin/emlak/ilan/{{ ilan.pk }}/change/">Admin Panelinde Düzenle</a>
+    </p>
+
+    <div class="bilgi-satiri"><strong>Durum:</strong>
+        <span
+            class="{% if ilan.durum == 'Aktif' %}durum-aktif{% elif ilan.durum == 'Satıldı' %}durum-satildi{% else %}durum-bekle{% endif %}">
+            {{ ilan.get_durum_display }}
+        </span>
+    </div>
+    style="color: {% if ilan.durum == 'Aktif' %}green{% elif ilan.durum == 'Satıldı' %}red{% else %}orange{% endif %}">
+    {{ ilan.get_durum_display }}
+    </span>
+    </div>
+    <div class="bilgi-satiri"><strong>Tapu Durumu:</strong> {{ ilan.get_tapu_durumu_display }}</div>
+    <div class="bilgi-satiri"><strong>Krediye Uygun:</strong> {% if ilan.krediye_uygun %}✅ Evet{% else %}❌ Hayır{%
+        endif %}</div>
+    </div>
+
+    <div class="detay-kutu">
+        <div class="baslik">📏 Fiziksel ve Ek Özellikler</div>
+        <div class="bilgi-satiri"><strong>Oda Sayısı:</strong> {{ ilan.oda_sayisi }}</div>
+        <div class="bilgi-satiri"><strong>Net/Brüt Alan:</strong> {{ ilan.net_alan }} m² / {{ ilan.brut_alan }} m²</div>
+        <div class="bilgi-satiri"><strong>Bina Yaşı:</strong> {{ ilan.get_bina_yasi_display }}</div>
+        <div class="bilgi-satiri"><strong>Kat Bilgisi:</strong> {{ ilan.bulundugu_kat }}. Kat / {{ ilan.kat_sayisi }}
+            Katlı</div>
+        <div class="bilgi-satiri"><strong>Site Adı:</strong> {{ ilan.site_adi|default:"Yok" }}</div>
+        <div class="bilgi-satiri"><strong>Otopark/Asansör/Eşyalı:</strong> {{ ilan.otopark|default:"-" }} / {% if
+            ilan.asansor %}✅{% else %}❌{% endif %} / {% if ilan.esyali %}✅{% else %}❌{% endif %}</div>
+    </div>
+
+    <div class="detay-kutu">
+        <div class="baslik">🗓️ İlan Randevuları</div>
+        {% if ilgili_randevular %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarih</th>
+                    <th>Müşteri</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for randevu in ilgili_randevular %}
+                <tr>
+                    <td>{{ randevu.tarih_saat|date:"d.m.Y H:i" }}</td>
+                    <td><a href="{% url 'musteri_detay' pk=randevu.ilgili_musteri.pk %}">{{
+                            randevu.ilgili_musteri.ad_soyad }}</a></td>
+                    <td>{{ randevu.get_durum_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Bu ilanla ilgili planlanmış randevu bulunmamaktadır.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

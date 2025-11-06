@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tüm Müşteriler</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>👥 Müşteri Listesi (Toplam: {{ tum_musteriler.count }})</h1>
+
+    <p><a href="{% url 'ana_sayfa' %}">← Ana Sayfaya Geri Dön</a> | <a href="{% url 'gelismis_arama' %}">🔍 Arama
+            Yap</a></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Adı Soyadı</th>
+                <th>Telefon</th>
+                <th>E-posta</th>
+                <th>Talep Özeti</th>
+                <th>Kayıt Tarihi</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for musteri in tum_musteriler %}
+            <tr>
+                <td><a href="{% url 'musteri_detay' pk=musteri.pk %}">{{ musteri.ad_soyad }}</a></td>
+                <td>{{ musteri.telefon }}</td>
+                <td>{{ musteri.email|default:"-" }}</td>
+                <td>{{ musteri.talep_ozeti|truncatechars:70 }}</td>
+                <td>{{ musteri.kayit_tarihi|date:"d.m.Y" }}</td>
+                <td><a href="{% url 'musteri_detay' pk=musteri.pk %}">Geçmişi Gör</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Kayıtlı müşteri bulunmamaktadır.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

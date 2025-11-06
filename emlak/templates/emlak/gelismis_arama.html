@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gelişmiş Arama</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        form {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background-color: #f7faff;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 60%;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .sonuc-baslik {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Gelişmiş Arama</h1>
+    <p><a href="{% url 'ana_sayfa' %}">← Ana Sayfaya Geri Dön</a> |
+        <a href="{% url 'musteri_listesi' %}">Müşteriler</a> |
+        <a href="{% url 'ilan_listesi' %}">İlanlar</a>
+    </p>
+
+    <form method="GET" action="{% url 'gelismis_arama' %}">
+        <label for="q">İlan No, İl, İlçe, Ad Soyad veya Telefon ile arayın:</label><br>
+        <input type="text" id="q" name="q" value="{{ sorgu|default:'' }}" placeholder="Arama terimini girin..."
+            required>
+        <button type="submit">Ara</button>
+    </form>
+
+    {% if sorgu %}
+    <h2>Sonuçlar: "{{ sorgu }}"</h2>
+
+    <h3 class="sonuc-baslik">👤 Müşteri Sonuçları ({{ musteri_sonuclari.count }} adet)</h3>
+    {% if musteri_sonuclari %}
+    <table>
+        <thead>
+            <tr>
+                <th>Adı Soyadı</th>
+                <th>Telefon</th>
+                <th>Rolü</th>
+                <th>Kayıt Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for musteri in musteri_sonuclari %}
+            <tr>
+                <td><a href="{% url 'musteri_detay' pk=musteri.pk %}">{{ musteri.ad_soyad }}</a></td>
+                <td>{{ musteri.telefon }}</td>
+                <td>{{ musteri.get_rol_display }}</td>
+                <td>{{ musteri.kayit_tarihi|date:"d.m.Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Müşteri kayıtlarında eşleşme bulunamadı.</p>
+    {% endif %}
+
+    <h3 class="sonuc-baslik">🏡 İlan Sonuçları ({{ ilan_sonuclari.count }} adet)</h3>
+    {% if ilan_sonuclari %}
+    <table>
+        <thead>
+            <tr>
+                <th>İlan No</th>
+                <th>Konum</th>
+                <th>Oda</th>
+                <th>Fiyat</th>
+                <th>Durum</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ilan in ilan_sonuclari %}
+            <tr>
+                <td><a href="{% url 'ilan_detay' pk=ilan.pk %}">{{ ilan.ilan_no }}</a></td>
+                <td>{{ ilan.il }} / {{ ilan.ilce }}</td>
+                <td>{{ ilan.oda_sayisi }}</td>
+                <td>{{ ilan.fiyat|floatformat:0 }} TL</td>
+                <td>{{ ilan.get_durum_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>İlan kayıtlarında eşleşme bulunamadı.</p>
+    {% endif %}
+
+    {% else %}
+    <p>Arama yapmak için yukarıdaki alanı kullanın.</p>
+    {% endif %}
+</body>
+
+</html>

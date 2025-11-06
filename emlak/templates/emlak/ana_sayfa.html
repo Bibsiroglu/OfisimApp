@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>OfisimApp - Ana Sayfa (Dashboard)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .ozet-kutu {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .hatirlatici {
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🏢 OFİS YÖNETİM PANELİ</h1>
+
+        <p>Hızlı Erişim:
+            <a href="{% url 'ilan_listesi' %}">Aktif İlanlar</a>
+            <a href="{% url 'musteri_listesi' %}">Müşteriler</a>
+            <a href="{% url 'gelismis_arama' %}">Hızlı Arama</a>
+            <a href="/admin">Admin Paneli (Giriş)</a>
+        </p>
+
+        <div class="grid-container">
+            <div class="ozet-kutu">
+                <h2>🏠 Aktif İlanlar</h2>
+                <p>Toplam Aktif İlan Sayısı: <strong>{{ aktif_ilan_sayisi }}</strong></p>
+                <p><a href="{% url 'ilan_listesi' %}">Detaylı İlan Listesi</a></p>
+            </div>
+
+            <div class="ozet-kutu">
+                <h2>🏠 Müşteriler</h2>
+                <p>Toplam Müşteri Sayısı: <strong>{{ musteri_sayisi }}</strong></p>
+                <p><a href="{% url 'musteri_listesi' %}">Detalı Müşteri Listesi</a></p>
+            </div>
+
+            <div class="ozet-kutu hatirlatici">
+                <h2>🗓️ Bugünün Randevuları ({{ bugunun_randevulari.count }})</h2>
+                {% if bugunun_randevulari %}
+                <ul>
+                    {% for randevu in bugunun_randevulari %}
+                    <li>
+                        <strong>{{ randevu.tarih_saat|date:"H:i" }}</strong> - Müşteri:
+                        <a href="{% url 'musteri_detay' pk=randevu.ilgili_musteri.pk %}">{{
+                            randevu.ilgili_musteri.ad_soyad }}</a>
+                        {% if randevu.ilan %} (İlan: <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{
+                            randevu.ilan.ilan_no }}</a>) {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>Bugün için planlanmış randevu yok. 🎉</p>
+                {% endif %}
+            </div>
+
+            <div class="ozet-kutu hatirlatici" style="border-color: #dc3545; background-color: #f8d7da;">
+                <h2>🚨 Yaklaşan Sözleşme Bitişleri</h2>
+                {% if yaklasan_sozlesmeler %}
+                <p style="color: red;"><strong>{{ yaklasan_sozlesmeler.count }}</strong> sözleşmenin süresi yaklaşıyor!
+                </p>
+                <ul>
+                    {% for sozlesme in yaklasan_sozlesmeler %}
+                    <li>
+                        <strong>{{ sozlesme.bitis_tarihi|date:"d.m.Y" }}</strong> - {{
+                        sozlesme.get_sozlesme_tipi_display }} No: {{ sozlesme.sozlesme_no }}
+                        ({% if sozlesme.ilgili_musteri %}{{ sozlesme.ilgili_musteri.ad_soyad }}{% endif %})
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>Önümüzdeki 30 gün içinde süresi dolacak aktif sözleşme yok. ✅</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

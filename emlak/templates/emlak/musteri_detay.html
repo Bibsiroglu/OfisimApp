@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ musteri.ad_soyad }} - Müşteri Geçmişi (CRM)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        .bilgi-kutu {
+            border: 1px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f7faff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        h2 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+
+        .alert-red {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>👤 Müşteri Geçmişi: {{ musteri.ad_soyad }}</h1>
+
+    <p>
+        <a href="{% url 'ana_sayfa' %}">← Ana Sayfaya Geri Dön</a> |
+        <a href="{% url 'musteri_listesi' %}">Müşteri Listesi</a> |
+        <a href="/admin/emlak/musteri/{{ musteri.id }}/change/">Admin Panelinde Düzenle</a>
+    </p>
+
+    <div class="bilgi-kutu">
+        <h2>Temel Bilgiler</h2>
+        <p><strong>Rol:</strong> <span class="alert-red">{{ musteri.get_rol_display }}</span></p>
+        <p><strong>Telefon:</strong> {{ musteri.telefon }}</p>
+        <p><strong>E-posta:</strong> {{ musteri.email|default:"Belirtilmemiş" }}</p>
+        <p><strong>Talep Özeti:</strong> {{ musteri.talep_ozeti }}</p>
+        <p><strong>Kayıt Tarihi:</strong> {{ musteri.kayit_tarihi|date:"d.m.Y" }}</p>
+    </div>
+
+    <h2>📑 Sözleşme Geçmişi ({{ sozlesmeler.count }} Adet)</h2>
+    {% if sozlesmeler %}
+    <table>
+        <thead>
+            <tr>
+                <th>Söz. No</th>
+                <th>Tip</th>
+                <th>Taraf Rolü</th>
+                <th>İlgili İlan</th>
+                <th>Başlangıç/Bitiş</th>
+                <th>Komisyon/Depozito</th>
+                <th>Dosya</th>
+                <th>Durum</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sozlesme in sozlesmeler %}
+            <tr>
+                <td><a href="/admin/emlak/sozlesme/{{ sozlesme.id }}/change/">{{ sozlesme.sozlesme_no }}</a></td>
+                <td>{{ sozlesme.get_sozlesme_tipi_display }}</td>
+                <td>
+                    {% if musteri == sozlesme.sahip_musteri %}Ana Taraf{% elif musteri == sozlesme.karsi_taraf_musteri
+                    %}Karşı Taraf{% else %}?{% endif %}
+                </td>
+                <td>
+                    {% if sozlesme.ilgili_ilan %}
+                    <a href="{% url 'ilan_detay' pk=sozlesme.ilgili_ilan.pk %}">{{ sozlesme.ilgili_ilan.ilan_no }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ sozlesme.baslangic_tarihi|date:"d.m.Y" }} / {{
+                    sozlesme.bitis_tarihi|date:"d.m.Y"|default:"Süresiz" }}</td>
+
+                <td>
+                    Komisyon: {{ sozlesme.komisyon_tutari|default:"-" }} TL<br>
+                    Depozito: {{ sozlesme.depozito_tutari|default:"-" }} TL
+                </td>
+
+                <td>
+                    {% if sozlesme.dosya %}
+                    <a href="{{ sozlesme.dosya.url }}" target="_blank">İndir</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+
+                <td>{{ sozlesme.get_durum_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Bu müşteriyle yapılmış kayıtlı bir sözleşme bulunmamaktadır.</p>
+    {% endif %}
+
+    <h2>📅 Randevu Geçmişi ({{ randevular.count }} Adet)</h2>
+    {% if randevular %}
+    <table>
+        <thead>
+            <tr>
+                <th>Tarih/Saat</th>
+                <th>İlgili İlan</th>
+                <th>Durum</th>
+                <th>Notlar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for randevu in randevular %}
+            <tr>
+                <td>{{ randevu.tarih_saat|date:"d.m.Y H:i" }}</td>
+                <td>
+                    {% if randevu.ilan %}
+                    <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{ randevu.ilan.ilan_no }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ randevu.get_durum_display }}</td>
+                <td>{{ randevu.notlar|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Bu müşteriyle planlanmış veya tamamlanmış randevu bulunmamaktadır.</p>
+    {% endif %}
+
+    <h2>🏡 Randevu Alınan İlanlar</h2>
+    {% if ilgilenilen_ilanlar %}
+    <ul>
+        {% for ilan in ilgilenilen_ilanlar %}
+        <li>
+            <a href="{% url 'ilan_detay' pk=ilan.pk %}">{{ ilan.ilan_no }}</a>
+            ({{ ilan.il }}/{{ ilan.ilce }}, {{ ilan.fiyat|floatformat:0|default:"-" }} TL)
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Bu müşterinin ilgilenip randevu aldığı aktif ilan bulunmamaktadır.</p>
+    {% endif %}
+
+</body>
+
+</html>
