@@ -84,8 +84,7 @@
                 <td><a href="/admin/emlak/sozlesme/{{ sozlesme.id }}/change/">{{ sozlesme.sozlesme_no }}</a></td>
                 <td>{{ sozlesme.get_sozlesme_tipi_display }}</td>
                 <td>
-                    {% if musteri == sozlesme.sahip_musteri %}Ana Taraf{% elif musteri == sozlesme.karsi_taraf_musteri
-                    %}Karşı Taraf{% else %}?{% endif %}
+                    {% if musteri == sozlesme.sahip_musteri %}Ana Taraf{% elif musteri == sozlesme.karsi_taraf_musteri %}Karşı Taraf{% else %}?{% endif %}
                 </td>
                 <td>
                     {% if sozlesme.ilgili_ilan %}
@@ -94,14 +93,11 @@
                     -
                     {% endif %}
                 </td>
-                <td>{{ sozlesme.baslangic_tarihi|date:"d.m.Y" }} / {{
-                    sozlesme.bitis_tarihi|date:"d.m.Y"|default:"Süresiz" }}</td>
-
+                <td>{{ sozlesme.baslangic_tarihi|date:"d.m.Y" }} / {{ sozlesme.bitis_tarihi|date:"d.m.Y"|default:"Süresiz" }}</td>
                 <td>
                     Komisyon: {{ sozlesme.komisyon_tutari|default:"-" }} TL<br>
                     Depozito: {{ sozlesme.depozito_tutari|default:"-" }} TL
                 </td>
-
                 <td>
                     {% if sozlesme.dosya %}
                     <a href="{{ sozlesme.dosya.url }}" target="_blank">İndir</a>
@@ -109,7 +105,6 @@
                     -
                     {% endif %}
                 </td>
-
                 <td>{{ sozlesme.get_durum_display }}</td>
             </tr>
             {% endfor %}
@@ -125,7 +120,7 @@
         <thead>
             <tr>
                 <th>Tarih/Saat</th>
-                <th>İlgili İlan</th>
+                <th>Telefon</th> <th>İlgili İlan</th>
                 <th>Durum</th>
                 <th>Notlar</th>
             </tr>
@@ -134,7 +129,7 @@
             {% for randevu in randevular %}
             <tr>
                 <td>{{ randevu.tarih_saat|date:"d.m.Y H:i" }}</td>
-                <td>
+                <td>{{ randevu.ilgili_musteri.telefon }}</td> <td>
                     {% if randevu.ilan %}
                     <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{ randevu.ilan.ilan_no }}</a>
                     {% else %}
@@ -164,7 +159,3 @@
     {% else %}
     <p>Bu müşterinin ilgilenip randevu aldığı aktif ilan bulunmamaktadır.</p>
     {% endif %}
-
-</body>
-
-</html>

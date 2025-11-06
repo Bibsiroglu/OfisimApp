@@ -21,9 +21,18 @@ class MusteriAdmin(admin.ModelAdmin):
 
 # --- 3. RANDEVU YÖNETİMİ ---
 class RandevuAdmin(admin.ModelAdmin):
-    list_display = ('tarih_saat', 'ilgili_musteri', 'ilan', 'durum')
+    # list_display'e yeni metot 'musteri_telefonu' eklendi
+    list_display = ('tarih_saat', 'ilgili_musteri', 'musteri_telefonu', 'ilan', 'durum')
     list_filter = ('durum', 'tarih_saat')
+    autocomplete_fields = ('ilgili_musteri', 'ilan') 
     search_fields = ('ilgili_musteri__ad_soyad', 'ilan__ilan_no') 
+
+    # YENİ METOT: Müşteri nesnesindeki telefon bilgisini çeker
+    def musteri_telefonu(self, obj):
+        # Randevu objesi (obj) üzerinden ilişkili müşterinin telefonunu çek
+        return obj.ilgili_musteri.telefon
+    
+    musteri_telefonu.short_description = 'Müşteri Telefonu'
 
 # --- 4. SÖZLEŞME YÖNETİMİ ---
 class SozlesmeAdmin(admin.ModelAdmin):
