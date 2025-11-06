@@ -4,11 +4,11 @@ from .models import Ilan, Musteri, Randevu, Sozlesme
 # --- 1. İLAN YÖNETİMİ ---
 class IlanAdmin(admin.ModelAdmin):
     # list_display'e 'mulk_sahibi' eklendi
-    list_display = ('ilan_no', 'mulk_sahibi', 'il', 'ilce', 'oda_sayisi', 'fiyat', 'durum', 'kayit_tarihi')
+    list_display = ('ilan_no', 'baslik', 'mulk_sahibi', 'oda_sayisi', 'fiyat', 'durum', 'kayit_tarihi')
     
     # list_filter ve search_fields'e mulk sahibi eklendi
     list_filter = ('durum', 'emlak_tipi', 'il', 'ilce', 'krediye_uygun', 'esyali')
-    search_fields = ('ilan_no', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad') # Mülk sahibi adına göre arama
+    search_fields = ('ilan_no', 'baslik', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad') # Mülk sahibi adına göre arama
 
     # Otomatik arama kutusu ekleyelim
     autocomplete_fields = ('mulk_sahibi',)

@@ -37,6 +37,7 @@ TAPU_DURUMU_SECENEKLERI = [
 # --- İLAN MODELİ ---
 class Ilan(models.Model):
     ilan_no = models.CharField(max_length=20, unique=True, verbose_name="İlan No", blank=True, null=True)
+    baslik = models.CharField(max_length=150, verbose_name="İlan Başlığı")
     emlak_tipi = models.CharField(max_length=20, choices=EMLAK_TIPI_SECENEKLERI, verbose_name="Emlak Tipi")
     il = models.CharField(max_length=50)
     ilce = models.CharField(max_length=50)
@@ -71,7 +72,6 @@ class Ilan(models.Model):
         null=True,
         blank=True,
         related_name='ilanlarim',
-        limit_choices_to={'rol': 'satici'}, 
         verbose_name='Mülk Sahibi'
     )
     

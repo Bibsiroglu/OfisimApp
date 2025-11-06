@@ -127,3 +127,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Yüklenen medya dosyalarına erişileceği URL
 MEDIA_URL = '/media/'
+
+# 1. Giriş yapılmamış kullanıcıyı nereye yönlendirsin? -> Django Admin Giriş Sayfasına
+LOGIN_URL = '/admin/login/'
+
+# 2. Başarılı girişten sonra kullanıcıyı nereye yönlendirsin? -> Kendi Dashboard'umuza
+LOGIN_REDIRECT_URL = '/'
