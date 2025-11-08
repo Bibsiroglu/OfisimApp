@@ -66,7 +66,7 @@
 
 <body>
     <h1>🏠 İlan Detay: {{ ilan.ilan_no }}</h1>
-    <h2>{{ ilan.il }} / {{ ilan.ilce }} - {{ ilan.mahalle }}</h2>
+    <h2>{{ ilan.il }} / {{ ilan.ilce }} - {{ ilan.mahalle }} - {{ tam_adres }}</h2>
 
     <p><a href="{% url 'ilan_listesi' %}">← İlan Listesine Geri Dön</a> |
         <a href="/admin/emlak/ilan/{{ ilan.pk }}/change/">Admin Panelinde Düzenle</a>

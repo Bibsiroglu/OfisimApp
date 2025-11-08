@@ -67,6 +67,7 @@ class Ilan(models.Model):
     emlak_tipi = models.CharField(max_length=20, choices=EMLAK_TIPI_SECENEKLERI, verbose_name="Emlak Tipi")
     il = models.CharField(max_length=50)
     ilce = models.CharField(max_length=50)
+    tam_adres = models.TextField(verbose_name="Tam Adres/Sokak/Bina No", null=True, blank=True)
     mahalle = models.CharField(max_length=100, verbose_name="Mahalle/Semt")
     oda_sayisi = models.CharField(max_length=10, verbose_name="Oda Sayısı")
     brut_alan = models.DecimalField(max_digits=6, decimal_places=1, verbose_name="Brüt Alan (m²)")

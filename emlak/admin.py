@@ -8,12 +8,12 @@ class IlanAdmin(admin.ModelAdmin):
         'ilan_no', 
         'baslik', 
         'mulk_sahibi', 
+        'emlak_tipi', 
         'oda_sayisi', 
         'fiyat', 
-        'durum', 
         'isitma',
-        'otopark',
-        'kayit_tarihi'
+        'esyali',
+        'durum'
     )
 
     list_filter = (
@@ -24,7 +24,8 @@ class IlanAdmin(admin.ModelAdmin):
         'mutfak',
         'il', 
         'ilce', 
-        'krediye_uygun'
+        'krediye_uygun',
+        'esyali'
     )
     search_fields = ('ilan_no', 'baslik', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad')
 
@@ -38,7 +39,7 @@ class IlanAdmin(admin.ModelAdmin):
                 ('ilan_no', 'mulk_sahibi'), 
                 'baslik', 
                 'emlak_tipi', 
-                ('il', 'ilce', 'mahalle'), 
+                ('il', 'ilce', 'mahalle', 'tam_adres'), 
                 ('fiyat', 'durum')
             )
         }),
