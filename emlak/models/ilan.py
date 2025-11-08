@@ -1,8 +1,29 @@
 from django.db import models
-
+from django.utils import timezone
 from emlak.models.musteri import Musteri
 
 # --- SABİT SEÇENEK LİSTELERİ ---
+ISITMA_SECENEKLERI = [
+    ('Dogalgaz_Kombi', 'Doğalgaz (Kombi)'),
+    ('Merkezi_Payolcer', 'Merkezi (Pay Ölçer)'),
+    ('Merkezi', 'Merkezi'),
+    ('Klima', 'Klima'),
+    ('Soba', 'Soba'),
+]
+
+OTOPARK_SECENEKLERI = [
+    ('Yok', 'Yok'),
+    ('Acik', 'Açık Otopark'),
+    ('Kapali', 'Kapalı Otopark'),
+    ('Acik_Kapali', 'Açık ve Kapalı'),
+]
+
+MUTFAK_SECENEKLERI = [
+    ('Kapali', 'Kapalı Mutfak'),
+    ('Amerikan', 'Amerikan Mutfak'),
+    ('Yari_Acik', 'Yarı Açık Mutfak'),
+]
+
 DURUM_SECENEKLERI = [
     ('Aktif','Aktif'),
     ('Satıldı','Satıldı'),
@@ -38,6 +59,11 @@ TAPU_DURUMU_SECENEKLERI = [
 class Ilan(models.Model):
     ilan_no = models.CharField(max_length=20, unique=True, verbose_name="İlan No", blank=True, null=True)
     baslik = models.CharField(max_length=150, verbose_name="İlan Başlığı")
+    isitma = models.CharField(max_length=30, choices=ISITMA_SECENEKLERI, default='Yok', verbose_name="Isıtma Tipi")
+    otopark = models.CharField(max_length=30, choices=OTOPARK_SECENEKLERI, default='Yok', verbose_name="Otopark")
+    mutfak = models.CharField(max_length=30, choices=MUTFAK_SECENEKLERI, default='Kapali', verbose_name="Mutfak Tipi") # Varsayılan mutfak tipi
+
+    yayindan_kaldirma_tarihi = models.DateTimeField(null=True, blank=True, verbose_name="Yayından Kaldırma Tarihi")
     emlak_tipi = models.CharField(max_length=20, choices=EMLAK_TIPI_SECENEKLERI, verbose_name="Emlak Tipi")
     il = models.CharField(max_length=50)
     ilce = models.CharField(max_length=50)
@@ -49,11 +75,9 @@ class Ilan(models.Model):
     bulundugu_kat = models.IntegerField(verbose_name="Bulunduğu Kat")
     kat_sayisi = models.IntegerField(verbose_name="Toplam Kat Sayısı")
     banyo_sayisi = models.IntegerField(default=1, verbose_name="Banyo Sayısı")
-    mutfak = models.CharField(max_length=50, default='Ayrı', verbose_name="Mutfak Tipi")
     krediye_uygun = models.BooleanField(default=False, verbose_name="Krediye Uygun")
     site_icerisinde = models.BooleanField(default=False, verbose_name="Site İçerisinde")
     site_adi = models.CharField(max_length=100, blank=True, null=True)
-    otopark = models.CharField(max_length=50, default='Yok', verbose_name="Otopark Tipi")
     asansor = models.BooleanField(default=False)
     balkon = models.BooleanField(default=False)
     esyali = models.BooleanField(default=False, verbose_name="Eşyalı")
@@ -63,8 +87,14 @@ class Ilan(models.Model):
     fiyat = models.BigIntegerField()
     durum = models.CharField(max_length=25, default='Aktif', choices=DURUM_SECENEKLERI)
     tapu_durumu = models.CharField(max_length=30, choices=TAPU_DURUMU_SECENEKLERI, verbose_name="Tapu Durumu")
-    kayit_tarihi = models.DateTimeField(auto_now_add=True, verbose_name="İlana Koyulma Tarihi")
-    son_guncelleme_tarihi = models.DateTimeField(auto_now=True, verbose_name="Son Güncellenme Tarihi")
+    kayit_tarihi = models.DateTimeField(
+        default=timezone.now, # <<< DİKKAT: PARANTEZSİZ!
+        verbose_name="Kayıt Tarihi"
+    )
+    son_guncelleme_tarihi = models.DateTimeField(
+        auto_now=True, 
+        verbose_name="Son Güncellenme Tarihi"
+    )
     yayindan_kaldirma_tarihi = models.DateTimeField(null=True, blank=True, verbose_name="Yayından Kaldırma Tarihi") 
     mulk_sahibi = models.ForeignKey(
         Musteri,

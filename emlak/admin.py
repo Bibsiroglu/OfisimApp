@@ -1,17 +1,61 @@
 from django.contrib import admin
 from .models import Ilan, Musteri, Randevu, Sozlesme
+from django.contrib import admin
 
-# --- 1. İLAN YÖNETİMİ ---
 class IlanAdmin(admin.ModelAdmin):
-    # list_display'e 'mulk_sahibi' eklendi
-    list_display = ('ilan_no', 'baslik', 'mulk_sahibi', 'oda_sayisi', 'fiyat', 'durum', 'kayit_tarihi')
-    
-    # list_filter ve search_fields'e mulk sahibi eklendi
-    list_filter = ('durum', 'emlak_tipi', 'il', 'ilce', 'krediye_uygun', 'esyali')
-    search_fields = ('ilan_no', 'baslik', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad') # Mülk sahibi adına göre arama
 
-    # Otomatik arama kutusu ekleyelim
+    list_display = (
+        'ilan_no', 
+        'baslik', 
+        'mulk_sahibi', 
+        'oda_sayisi', 
+        'fiyat', 
+        'durum', 
+        'isitma',
+        'otopark',
+        'kayit_tarihi'
+    )
+
+    list_filter = (
+        'durum', 
+        'emlak_tipi', 
+        'isitma',
+        'otopark',
+        'mutfak',
+        'il', 
+        'ilce', 
+        'krediye_uygun'
+    )
+    search_fields = ('ilan_no', 'baslik', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad')
+
     autocomplete_fields = ('mulk_sahibi',)
+    
+    readonly_fields = ('son_guncelleme_tarihi',) 
+
+    fieldsets = (
+        ('TEMEL BİLGİLER VE KONUM', {
+            'fields': (
+                ('ilan_no', 'mulk_sahibi'), 
+                'baslik', 
+                'emlak_tipi', 
+                ('il', 'ilce', 'mahalle'), 
+                ('fiyat', 'durum')
+            )
+        }),
+        ('FİZİKSEL VE TEKNİK ÖZELLİKLER', {
+            'fields': (
+                ('oda_sayisi', 'brut_alan', 'net_alan'), 
+                ('bina_yasi', 'bulundugu_kat', 'kat_sayisi'),
+                ('banyo_sayisi', 'mutfak'),
+                ('isitma', 'otopark'),
+                ('krediye_uygun', 'tapu_durumu')
+            )
+        }),
+        ('TARİHÇE VE YÖNETİM', {
+            'fields': ('kayit_tarihi', 'son_guncelleme_tarihi', 'yayindan_kaldirma_tarihi'),
+            'classes': ('collapse',)
+        }),
+    )
     
 # --- 2. MÜŞTERİ YÖNETİMİ ---
 class MusteriAdmin(admin.ModelAdmin):
