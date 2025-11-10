@@ -1,23 +1,23 @@
-// emlak/static/emlak/js/ilan_form_dinamik.js (İş Yeri ve Konut Optimizasyonu)
+// emlak/static/emlak/js/ilan_form_dinamik.js (Nihai ve Çözümlenmiş Sürüm)
 
 (function ($) {
     $(document).ready(function () {
 
         var $emlakTipiSelect = $('#id_emlak_tipi');
 
-        // --- 1. SADECE KİŞİSEL KONUT ALANLARI (İş Yeri seçilirse gizlenecekler) ---
+        // --- 1. SADECE KİŞİSEL KONUT VE GEREKSİZ ALANLAR (İş Yeri ve Arsa seçilirse gizlenecekler) ---
         var kisiselKonutAlanlari = [
             '#id_banyo_sayisi',
             '#id_mutfak',
             '#id_balkon',
             '#id_esyali',
+            '#id_brut_alan', // <<< BRÜT ALAN BURADA KESİN GİZLENİR
         ];
 
-        // --- 2. ORTAK MÜLK ALANLARI (Arsa dışındaki her şeyde görünür) ---
+        // --- 2. ORTAK MÜLK ALANLARI (NET ALAN DAHİL, GÖRÜNÜR KALMALI) ---
         var ortakMulkAlanlari = [
             '#id_oda_sayisi',
-            '#id_brut_alan',
-            '#id_net_alan',
+            '#id_net_alan',       // <<< NET ALAN BURADA KALIR
             '#id_bina_yasi',
             '#id_bulundugu_kat',
             '#id_kat_sayisi',
@@ -26,7 +26,7 @@
             '#id_aidat_tl'
         ];
 
-        // --- 3. ARSA ÖZEL ALANLARI (Konut/İşyeri seçilirse gizlenecekler) ---
+        // --- 3. ARSA ÖZEL ALANLARI ---
         var arsaOzelAlanlari = [
             '#id_imar_durumu', '#id_ada_no', '#id_parsel_no', '#id_pafta_no', '#id_kaks_emsal', '#id_gabari'
         ];
@@ -46,26 +46,23 @@
             $ortakMulkAlanlari.show();
             $arsaAlanlari.show();
 
-            // ----------------------------------------------------
-            // GİZLEME MANTIĞI
-            // ----------------------------------------------------
 
             if (tip.includes('arsa')) {
-                // ARSA seçildi: Tüm Konut/İşyeri alanlarını gizle
+                // ARSA seçildi
                 $kisiselKonutAlanlari.hide();
                 $ortakMulkAlanlari.hide();
                 $arsaAlanlari.show();
 
             } else if (tip.includes('isyeri')) {
-                // İŞ YERİ seçildi:
-                $arsaAlanlari.hide(); // Arsa alanları gizlenir
-                $kisiselKonutAlanlari.hide(); // Banyo, Mutfak, Balkon, Eşyalı gizlenir
-                $ortakMulkAlanlari.show(); // Oda, Isıtma, Bina Yaşı KALIR
+                // İŞ YERİ seçildi
+                $arsaAlanlari.hide();
+                $kisiselKonutAlanlari.hide();   // BRÜT ALAN gizlenir
+                $ortakMulkAlanlari.show();      // NET ALAN gösterilir
 
             } else {
-                // DAİRE VEYA VİLLA (KONUT): Sadece Arsa gizlenir, diğer her şey gösterilir
+                // DAİRE VEYA VİLLA (KONUT)
                 $arsaAlanlari.hide();
-                $kisiselKonutAlanlari.show();
+                $kisiselKonutAlanlari.show();   // BRÜT ALAN gösterilir
                 $ortakMulkAlanlari.show();
             }
         }
