@@ -3,6 +3,16 @@ from .models import Ilan, Musteri, Randevu, Sozlesme
 from django.contrib import admin
 
 class IlanAdmin(admin.ModelAdmin):
+    class Media:
+            js = (
+                # 1. Admin'in jQuery'si
+                'admin/js/vendor/jquery/jquery.js', 
+                # 2. Django'nun özel JS dosyaları (Autocomplete için gerekli)
+                'admin/js/jquery.init.js', 
+                
+                # 3. Kendi JS dosyamız (Yolun 'emlak/js/' altında olduğundan emin olun)
+                'emlak/js/ilan_form_dinamik.js',    
+            )
 
     list_display = (
         'ilan_no', 
@@ -55,6 +65,10 @@ class IlanAdmin(admin.ModelAdmin):
         ('TARİHÇE VE YÖNETİM', {
             'fields': ('kayit_tarihi', 'son_guncelleme_tarihi', 'yayindan_kaldirma_tarihi'),
             'classes': ('collapse',)
+        }),
+        ('ARSA VE RESMİ BİLGİLER', { # <<< YENİ ARSA GRUBU
+            'fields': ('imar_durumu', ('ada_no', 'parsel_no', 'pafta_no'), ('kaks_emsal', 'gabari')),
+            'classes': ('collapse',) # Başlangıçta gizli tutar, sadece arsa seçilirse açılır
         }),
     )
     
