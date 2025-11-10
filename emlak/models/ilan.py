@@ -3,6 +3,13 @@ from django.utils import timezone
 from emlak.models.musteri import Musteri
 
 # --- SABİT SEÇENEK LİSTELERİ ---
+
+KAT_SECENEKLERI = [
+    ('-', '-')
+]
+for i in range (1,31):
+    KAT_SECENEKLERI.append((str(i), str(i)))
+
 ISITMA_SECENEKLERI = [
     ('Dogalgaz_Kombi', 'Doğalgaz (Kombi)'),
     ('Merkezi_Payolcer', 'Merkezi (Pay Ölçer)'),
@@ -80,8 +87,8 @@ class Ilan(models.Model):
     brut_alan = models.DecimalField(max_digits=6, decimal_places=1, verbose_name="Brüt Alan (m²)")
     net_alan = models.DecimalField(max_digits=6, decimal_places=1, verbose_name="Net Alan (m²)")
     bina_yasi = models.CharField(max_length=10, choices=BINA_YASI_SECENEKLERI, verbose_name="Bina Yaşı")
-    bulundugu_kat = models.IntegerField(verbose_name="Bulunduğu Kat")
-    kat_sayisi = models.IntegerField(verbose_name="Toplam Kat Sayısı")
+    bulundugu_kat = models.CharField(max_length=5, choices=KAT_SECENEKLERI,default='HEPSI', verbose_name="Bulunduğu Kat Sayısı")
+    kat_sayisi = models.CharField(max_length=5, choices=KAT_SECENEKLERI,default='HEPSI', verbose_name="Toplam Kat Sayısı")
     banyo_sayisi = models.IntegerField(default=1, verbose_name="Banyo Sayısı")
     krediye_uygun = models.BooleanField(default=False, verbose_name="Krediye Uygun")
     site_icerisinde = models.BooleanField(default=False, verbose_name="Site İçerisinde")
