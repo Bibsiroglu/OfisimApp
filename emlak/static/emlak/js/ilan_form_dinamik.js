@@ -1,67 +1,79 @@
+// emlak/static/emlak/js/ilan_form_dinamik.js (İş Yeri ve Konut Optimizasyonu)
 
 (function ($) {
     $(document).ready(function () {
 
         var $emlakTipiSelect = $('#id_emlak_tipi');
 
-        // 1. KONUT / MÜLK İÇİ ALANLAR (Arsa seçilirse gizlenecekler)
-        var konutMulkAlanlari = [
+        // --- 1. SADECE KİŞİSEL KONUT ALANLARI (İş Yeri seçilirse gizlenecekler) ---
+        var kisiselKonutAlanlari = [
+            '#id_banyo_sayisi',
+            '#id_mutfak',
+            '#id_balkon',
+            '#id_esyali',
+        ];
+
+        // --- 2. ORTAK MÜLK ALANLARI (Arsa dışındaki her şeyde görünür) ---
+        var ortakMulkAlanlari = [
             '#id_oda_sayisi',
+            '#id_brut_alan',
+            '#id_net_alan',
             '#id_bina_yasi',
             '#id_bulundugu_kat',
             '#id_kat_sayisi',
-            '#id_banyo_sayisi',
-            '#id_mutfak',
-            '#id_isitma',              // Yeni eklediğiniz Isıtma
+            '#id_isitma',
             '#id_kullanım_durumu',
-            '#id_balkon',
-            '#id_esyali'
+            '#id_aidat_tl'
         ];
 
-        // 2. ARSA ÖZEL ALANLARI (Konut/İşyeri seçilirse gizlenecekler)
+        // --- 3. ARSA ÖZEL ALANLARI (Konut/İşyeri seçilirse gizlenecekler) ---
         var arsaOzelAlanlari = [
-            '#id_imar_durumu',
-            '#id_ada_no',
-            '#id_parsel_no',
-            '#id_pafta_no',
-            '#id_kaks_emsal',
-            '#id_gabari'
+            '#id_imar_durumu', '#id_ada_no', '#id_parsel_no', '#id_pafta_no', '#id_kaks_emsal', '#id_gabari'
         ];
 
-        // Alanları form-row kapsayıcısı ile bulur
-        var $konutAlanlari = $(konutMulkAlanlari.join(', ')).closest('.form-row, fieldset');
+        // Alanları Admin Formunda yer aldığı kapsayıcı DIV'leri buluyoruz
+        var $kisiselKonutAlanlari = $(kisiselKonutAlanlari.join(', ')).closest('.form-row, fieldset');
+        var $ortakMulkAlanlari = $(ortakMulkAlanlari.join(', ')).closest('.form-row, fieldset');
         var $arsaAlanlari = $(arsaOzelAlanlari.join(', ')).closest('.form-row, fieldset');
 
 
         function toggleFields(secilenTip) {
 
-            $konutAlanlari.show();
-            $arsaAlanlari.show();
-
-            // Seçilen tipin DB'deki kısa kodunu kontrol ediyoruz
             var tip = secilenTip.toLowerCase();
 
+            // Başlangıçta tüm alanları göster
+            $kisiselKonutAlanlari.show();
+            $ortakMulkAlanlari.show();
+            $arsaAlanlari.show();
+
+            // ----------------------------------------------------
+            // GİZLEME MANTIĞI
+            // ----------------------------------------------------
+
             if (tip.includes('arsa')) {
-                // ARSA seçildi: Konut özelliklerini gizle, Arsa özelliklerini göster
-                $konutAlanlari.hide();
+                // ARSA seçildi: Tüm Konut/İşyeri alanlarını gizle
+                $kisiselKonutAlanlari.hide();
+                $ortakMulkAlanlari.hide();
                 $arsaAlanlari.show();
 
-            } else if (tip.includes('daire') || tip.includes('villa') || tip.includes('isyeri')) {
-                // KONUT veya İŞYERİ seçildi: Arsa özelliklerini gizle, Konut/Mülk özelliklerini göster
-                $arsaAlanlari.hide();
-                $konutAlanlari.show();
+            } else if (tip.includes('isyeri')) {
+                // İŞ YERİ seçildi:
+                $arsaAlanlari.hide(); // Arsa alanları gizlenir
+                $kisiselKonutAlanlari.hide(); // Banyo, Mutfak, Balkon, Eşyalı gizlenir
+                $ortakMulkAlanlari.show(); // Oda, Isıtma, Bina Yaşı KALIR
 
             } else {
-                // Diğer durumlarda hepsini göster (Güvenlik için)
-                $konutAlanlari.show();
-                $arsaAlanlari.show();
+                // DAİRE VEYA VİLLA (KONUT): Sadece Arsa gizlenir, diğer her şey gösterilir
+                $arsaAlanlari.hide();
+                $kisiselKonutAlanlari.show();
+                $ortakMulkAlanlari.show();
             }
         }
 
-        // 1. Sayfa yüklendiğinde bir kere çalıştır (Düzenleme ekranı için KRİTİK!)
+        // Sayfa yüklendiğinde bir kere çalıştır
         toggleFields($emlakTipiSelect.val());
 
-        // 2. Seçim değiştiğinde çalıştır
+        // Seçim değiştiğinde çalıştır
         $emlakTipiSelect.on('change', function () {
             toggleFields($(this).val());
         });

@@ -1,5 +1,43 @@
 <!DOCTYPE html>
 <html lang="tr">
+<script>
+    // JSON verilerini çekme
+    const ILAN_BASLIKLARI_STRING = "{{ ilan_grafigi_basliklari_json|safe }}";
+    const ILAN_VERILERI_STRING = "{{ ilan_grafigi_verileri_json }}";
+    // static/js/dosyanız veya ana_sayfa.html script bloğu içinde
+
+    function drawIlanRandevuChart() {
+
+        // 1. String verileri al
+        const ILAN_BASLIKLARI_STRING = "{{ ilan_grafigi_basliklari_json|safe }}";
+        const ILAN_VERILERI_STRING = "{{ ilan_grafigi_verileri_json }}";
+
+        // 2. JSON.parse ile JavaScript dizisine/nesnesine dönüştür
+        let ilanBasliklari;
+        let ilanVerileri;
+
+        try {
+            ilanBasliklari = JSON.parse(ILAN_BASLIKLARI_STRING.replace(/&quot;/g, '"'));
+            ilanVerileri = JSON.parse(ILAN_VERILERI_STRING);
+        } catch (e) {
+            console.error("Grafik verileri işlenemedi:", e);
+            return;
+        }
+
+        // 3. Dönüştürülmüş veriyi Chart.js'e aktar
+        new Chart(ilanCtx, {
+            type: 'bar',
+            data: {
+                labels: ilanBasliklari, // Çözümlenmiş JavaScript Dizisi
+                datasets: [{
+                    data: ilanVerileri, // Çözümlenmiş JavaScript Dizisi
+                    // ...
+                }]
+            },
+            // ...
+        });
+    }
+</script>
 
 <head>
     <meta charset="UTF-8">
@@ -42,11 +80,22 @@
             border-radius: 5px;
             background-color: #fff3cd;
         }
-        
+
         /* Yeni Renkler */
-        .box-success { border-color: #28a745; background-color: #e6ffed; }
-        .box-info { border-color: #17a2b8; background-color: #e6faff; }
-        .box-danger { border-color: #dc3545; background-color: #f8d7da; }
+        .box-success {
+            border-color: #28a745;
+            background-color: #e6ffed;
+        }
+
+        .box-info {
+            border-color: #17a2b8;
+            background-color: #e6faff;
+        }
+
+        .box-danger {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
     </style>
 </head>
 
@@ -67,17 +116,18 @@
                 <p>Toplam Aktif İlan Sayısı: <strong>{{ aktif_ilan_sayisi }}</strong></p>
                 <p><a href="{% url 'ilan_listesi' %}">Detaylı İlan Listesi</a></p>
             </div>
-            
+
             <div class="ozet-kutu box-info">
                 <h2>📦 Pasif İlanlar</h2>
                 <p>Toplam Pasif İlan Sayısı: <strong>{{ pasif_ilan_sayisi }}</strong></p>
                 <p style="font-size: 0.9em; color: #17a2b8;">(Satıldı, Kiralandı, Kaldırıldı)</p>
             </div>
-            
+
             <div class="ozet-kutu">
                 <h2>👤 Müşteriler (CRM)</h2>
                 <p>Toplam Müşteri Sayısı: <strong>{{ toplam_musteri_sayisi }}</strong></p>
-                <p style="font-size: 0.9em;">Son 30 günde yeni: <strong>{{ son_30_gun_yeni_musteri_sayisi }}</strong></p>
+                <p style="font-size: 0.9em;">Son 30 günde yeni: <strong>{{ son_30_gun_yeni_musteri_sayisi }}</strong>
+                </p>
                 <p><a href="{% url 'musteri_listesi' %}">Detaylı Müşteri Listesi</a></p>
             </div>
 
@@ -88,8 +138,10 @@
                     {% for randevu in bugunun_randevulari %}
                     <li>
                         <strong>{{ randevu.tarih_saat|date:"H:i" }}</strong> - Müşteri:
-                        <a href="{% url 'musteri_detay' pk=randevu.ilgili_musteri.pk %}">{{ randevu.ilgili_musteri.ad_soyad }}</a>
-                        {% if randevu.ilan %} (İlan: <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{ randevu.ilan.ilan_no }}</a>) {% endif %}
+                        <a href="{% url 'musteri_detay' pk=randevu.ilgili_musteri.pk %}">{{
+                            randevu.ilgili_musteri.ad_soyad }}</a>
+                        {% if randevu.ilan %} (İlan: <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{
+                            randevu.ilan.ilan_no }}</a>) {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
@@ -106,7 +158,8 @@
                 <ul>
                     {% for sozlesme in yaklasan_sozlesmeler %}
                     <li>
-                        <strong>{{ sozlesme.bitis_tarihi|date:"d.m.Y" }}</strong> - {{ sozlesme.get_sozlesme_tipi_display }} No: {{ sozlesme.sozlesme_no }}
+                        <strong>{{ sozlesme.bitis_tarihi|date:"d.m.Y" }}</strong> - {{
+                        sozlesme.get_sozlesme_tipi_display }} No: {{ sozlesme.sozlesme_no }}
                     </li>
                     {% endfor %}
                 </ul>

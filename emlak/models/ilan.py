@@ -33,16 +33,17 @@ DURUM_SECENEKLERI = [
 
 EMLAK_TIPI_SECENEKLERI = [
     # Satılık Mülkler
-    ('Satilik Daire', 'Satılık Daire'),
-    ('Satilik Villa', 'Satılık Villa'),
-    ('Satilik Arsa', 'Satılık Arsa'),
-    ('Satilik İşyeri', 'Satılık İşyeri'),
+    ('Satilik_Daire', 'Satılık Daire'), # BOŞLUK KALDIRILDI
+    ('Satilik_Villa', 'Satılık Villa'), # BOŞLUK KALDIRILDI
+    ('Satilik_Arsa', 'Satılık Arsa'),   # BOŞLUK KALDIRILDI
+    ('Satilik_Isyeri', 'Satılık İşyeri'),# BOŞLUK KALDIRILDI
     
-    # Kiralık Mülkler (YENİ EKLENENLER)
-    ('Kiralik Daire', 'Kiralık Daire'),
-    ('Kiralik Villa', 'Kiralık Villa'),
-    ('Kiralik İşyeri', 'Kiralık İşyeri'),
+    # Kiralık Mülkler
+    ('Kiralik_Daire', 'Kiralık Daire'),
+    ('Kiralik_Villa', 'Kiralık Villa'),
+    ('Kiralik_Isyeri', 'Kiralık İşyeri'),
 ]
+
 BINA_YASI_SECENEKLERI = [
     ('0-5', '0-5 Yaşında'),
     ('6-10', '6-10 Yaşında'),
