@@ -5,34 +5,45 @@ from datetime import date, timedelta
 from django.db.models import Count
 from django.utils import timezone
 from django.db.models import Q 
+from django.db.models import Sum 
+import json 
+import operator
 
 # --- TEMEL VIEWS ---
+
 @login_required
 def ana_sayfa(request):
     """Dashboard'u gösterir: Özet veriler, bugünün/yaklaşan randevular, sözleşme bitişleri."""
+    
     bugun = date.today()
+    simdi = timezone.now()
+    
     otuz_gun_sonra = bugun + timedelta(days=30)
-    otuz_gun_once = timezone.now() - timedelta(days=30)
+    otuz_gun_once = simdi - timedelta(days=30)
+    yedi_gun_once = simdi - timedelta(days=7)
+    
+    # Model seçeneklerini alıyoruz (HTML filtreleri için)
+    emlak_tipi_secenekleri = Ilan._meta.get_field('emlak_tipi').choices
+    oda_sayisi_secenekleri = Ilan._meta.get_field('oda_sayisi').choices 
     
     # ------------------------------------------------------------------
     # Veri Çekme (Dashboard Metrikleri)
     # ------------------------------------------------------------------
+    
     aktif_ilan_sayisi = Ilan.objects.filter(durum='Aktif').count()
-    
-    # PASİF İLAN SAYISI
     pasif_ilan_sayisi = Ilan.objects.exclude(durum='Aktif').count()
-    
-    # Müşteri Metrikleri
     toplam_musteri_sayisi = Musteri.objects.count()
-    son_30_gun_yeni_musteri_sayisi = Musteri.objects.filter(
-        kayit_tarihi__gte=otuz_gun_once
-    ).count()
+    son_30_gun_yeni_musteri_sayisi = Musteri.objects.filter(kayit_tarihi__gte=otuz_gun_once).count()
     
     # Randevu ve Sözleşme Takibi
     bugunun_randevulari = Randevu.objects.filter(
         tarih_saat__date=bugun, 
         durum='Planlandı'
     ).select_related('ilgili_musteri', 'ilan').order_by('tarih_saat')
+
+    son_bir_hafta_randevulari = Randevu.objects.filter(
+        tarih_saat__range=(yedi_gun_once, simdi)
+    ).select_related('ilgili_musteri', 'ilan').order_by('-tarih_saat')
     
     yaklasan_sozlesmeler = Sozlesme.objects.filter(
         bitis_tarihi__gte=bugun, 
@@ -40,6 +51,28 @@ def ana_sayfa(request):
         durum='Aktif'
     ).select_related('sahip_musteri', 'karsi_taraf_musteri', 'ilgili_ilan').order_by('bitis_tarihi')
     
+    # GRAFİK VERİSİ HAZIRLAMA (Randevu Sıklığı)
+    ilan_randevu_performansi = Randevu.objects.filter(
+        ilan__isnull=False, ilan__durum='Aktif', 
+    ).values('ilan').annotate(randevu_sayisi=Count('ilan')).order_by('-randevu_sayisi')[:10]
+
+    ilan_basliklari = []
+    ilan_verileri = []
+    for item in ilan_randevu_performansi:
+        try:
+            ilan_obj = Ilan.objects.get(pk=item['ilan'])
+            ilan_basliklari.append(ilan_obj.baslik if ilan_obj.baslik else f"No: {ilan_obj.ilan_no}") 
+        except Ilan.DoesNotExist:
+             ilan_basliklari.append("Bilinmeyen İlan")
+             
+        ilan_verileri.append(item['randevu_sayisi'])
+    
+    ilan_grafigi_basliklari_json = json.dumps(ilan_basliklari)
+    ilan_grafigi_verileri_json = json.dumps(ilan_verileri)
+
+    # ------------------------------------------------------------------
+    # CONTEXT TANIMLAMASI (Tüm veriler burada birleştirilir)
+    # ------------------------------------------------------------------
     context = {
         'aktif_ilan_sayisi': aktif_ilan_sayisi,
         'pasif_ilan_sayisi': pasif_ilan_sayisi,
@@ -47,22 +80,51 @@ def ana_sayfa(request):
         'son_30_gun_yeni_musteri_sayisi': son_30_gun_yeni_musteri_sayisi,
         'bugunun_randevulari': bugunun_randevulari,
         'yaklasan_sozlesmeler': yaklasan_sozlesmeler,
+        'son_bir_hafta_randevulari': son_bir_hafta_randevulari,
+        'ilan_grafigi_basliklari_json': ilan_grafigi_basliklari_json,
+        'ilan_grafigi_verileri_json': ilan_grafigi_verileri_json,
+        'emlak_tipi_secenekleri': emlak_tipi_secenekleri, 
+        'oda_sayisi_secenekleri': oda_sayisi_secenekleri,
     }
     
-    return render(request, 'emlak/ana_sayfa.html', context)
+    return render(request, 'ana_sayfa.html', context)
+
 
 @login_required
 def ilan_listesi(request):
-    """Aktif ilanların listesini gösterir."""
-    aktif_ilanlar = Ilan.objects.filter(durum='Aktif').order_by('-fiyat')
-    context = {'aktif_ilanlar': aktif_ilanlar}
-    return render(request, 'emlak/ilan_listesi.html', context)
+    """Tüm (Aktif/Pasif) ilanları listeler ve GET filtrelerini uygular."""
+    
+    tum_ilanlar = Ilan.objects.all().select_related('mulk_sahibi').order_by('-kayit_tarihi')
+    
+    # GET parametrelerini alma
+    durum_filtresi = request.GET.get('durum')
+    il_filtresi = request.GET.get('il')
+    oda_filtresi = request.GET.get('oda_sayisi')
+    tip_filtresi = request.GET.get('emlak_tipi')
+    
+    # 3. FİLTRELEME MANTIĞI
+    if durum_filtresi and durum_filtresi != '':
+        tum_ilanlar = tum_ilanlar.filter(durum=durum_filtresi)
+    
+    if il_filtresi and il_filtresi != '':
+        tum_ilanlar = tum_ilanlar.filter(il__icontains=il_filtresi)
+    
+    if oda_filtresi and oda_filtresi != 'HEPSI' and oda_filtresi != '':
+        tum_ilanlar = tum_ilanlar.filter(oda_sayisi=oda_filtresi)
+    
+    if tip_filtresi and tip_filtresi != '':
+        tum_ilanlar = tum_ilanlar.filter(emlak_tipi=tip_filtresi)
+        
+    context = {'tum_ilanlar': tum_ilanlar}
+    
+    return render(request, 'ilan_listesi.html', context)
 
 @login_required
 def ilan_detay(request, pk):
     """Tek bir ilanın detayını gösterir."""
     ilan = get_object_or_404(Ilan, pk=pk)
     
+    # İlişkili randevuları ve sözleşmeleri çekelim
     ilgili_randevular = ilan.randevular.all().order_by('-tarih_saat')
     ilgili_sozlesmeler = ilan.sozlesmeler.all().order_by('-baslangic_tarihi')
     
@@ -76,8 +138,22 @@ def ilan_detay(request, pk):
         'ilgili_sozlesmeler': ilgili_sozlesmeler,
         'ilgilenen_musteriler': ilgilenen_musteriler,
     }
-    return render(request, 'emlak/ilan_detay.html', context)
+    # NOT: Dosya taşıma işlemi sonrası path'i sadece dosya adı olarak kullanıyoruz.
+    return render(request, 'ilan_detay.html', context)
 
+@login_required
+def musteri_listesi(request):
+    """Tüm müşterileri listeler (En yeniden eskiye)."""
+    
+    # Tüm müşterileri çeker ve sıralar
+    tum_musteriler = Musteri.objects.all().order_by('-kayit_tarihi')
+    
+    context = {
+        'tum_musteriler': tum_musteriler,
+    }
+    
+    # Dosya taşıma işlemi sonrası path'i sadece dosya adı olarak kullanıyoruz.
+    return render(request, 'musteri_listesi.html', context)
 
 @login_required
 def musteri_detay(request, pk):
@@ -106,19 +182,7 @@ def musteri_detay(request, pk):
         'ilgilenilen_ilanlar': ilgilenilen_ilanlar,
     }
     
-    return render(request, 'emlak/musteri_detay.html', context)
-
-@login_required
-def musteri_listesi(request):
-    """Tüm müşterileri listeler (En yeniden eskiye)."""
-    
-    tum_musteriler = Musteri.objects.all().order_by('-kayit_tarihi')
-    
-    context = {
-        'tum_musteriler': tum_musteriler,
-    }
-    
-    return render(request, 'emlak/musteri_listesi.html', context)
+    return render(request, 'musteri_detay.html', context)
 
 @login_required
 def gelismis_arama(request):
@@ -133,4 +197,26 @@ def gelismis_arama(request):
         from django.db.models import Q 
 
         # --- İLAN ARAMA ---
-        ilan_sonuclari = Ilan.objects.filter
+        ilan_sonuclari = Ilan.objects.filter(
+            Q(ilan_no__icontains=sorgu) | 
+            Q(il__icontains=sorgu) | 
+            Q(ilce__icontains=sorgu) 
+        ).distinct()
+        
+        # --- MÜŞTERİ ARAMA ---
+        musteri_sonuclari = Musteri.objects.filter(
+            Q(ad_soyad__icontains=sorgu) | 
+            Q(telefon__icontains=sorgu) | 
+            Q(talep_ozeti__icontains=sorgu) 
+        ).distinct()
+
+    context = {
+        'sorgu': sorgu,
+        'ilan_sonuclari': ilan_sonuclari,
+        'musteri_sonuclari': musteri_sonuclari,
+    }
+    
+    # Not: Dosya taşıma işlemi sonrası path'i sadece dosya adı olarak kullanıyoruz.
+    return render(request, 'gelismis_arama.html', context)
+# ... (Diğer view fonksiyonları aynı kalır: ilan_detay, musteri_detay, sozlesme_listesi, gelismis_arama)
+# (Bu fonksiyonların da kodunuzun devamında eksiksiz olduğundan emin olun.)

@@ -35,7 +35,8 @@ class IlanAdmin(admin.ModelAdmin):
         'il', 
         'ilce', 
         'krediye_uygun',
-        'esyali'
+        'esyali',
+        'oda_sayisi'
     )
     search_fields = ('ilan_no', 'baslik', 'il', 'ilce', 'mahalle', 'mulk_sahibi__ad_soyad')
 

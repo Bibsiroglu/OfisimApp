@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tüm İlanlar Yönetimi</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .durum-satildi {
+            color: red;
+        }
+
+        .durum-aktif {
+            color: green;
+            font-weight: bold;
+        }
+
+        .ilan-baslik {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏡 İlan Yönetimi (Toplam: {{ tum_ilanlar.count }})</h1>
+
+    <p><a href="{% url 'ana_sayfa' %}">← Ana Sayfaya Geri Dön</a> |
+        <a href="/admin/emlak/ilan/add/">➕ Yeni İlan Ekle</a>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>İlan No</th>
+                <th>Başlık</th>
+                <th>Mülk Sahibi</th>
+                <th>Konum / Tip</th>
+                <th>Oda / Bölme</th>
+                <th>Otopark/Isıtma</th>
+                <th>Fiyat (TL)</th>
+                <th>Durum</th>
+                <th>Kalkma Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ilan in tum_ilanlar %}
+            <tr>
+                <td><a href="{% url 'ilan_detay' pk=ilan.pk %}">{{ ilan.ilan_no }}</a></td>
+                <td class="ilan-baslik">{{ ilan.baslik|truncatechars:30 }}</td>
+
+                <td>
+                    {% if ilan.mulk_sahibi %}
+                    <a href="{% url 'musteri_detay' pk=ilan.mulk_sahibi.pk %}">{{ ilan.mulk_sahibi.ad_soyad }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+
+                <td>{{ ilan.il }} / {{ ilan.ilce }} ({{ ilan.get_emlak_tipi_display }})</td>
+
+                <td>
+                    {% if ilan.oda_sayisi %} {{ ilan.oda_sayisi }} {% else %} {{ ilan.bolme_sayisi|default:"-" }} {%
+                    endif %}
+                </td>
+
+                <td>
+                    Isıtma: {{ ilan.get_isitma_display|default:"-" }}<br>
+                    Otopark: {{ ilan.get_otopark_display|default:"-" }}
+                </td>
+
+                <td>{{ ilan.fiyat|floatformat:0|default:"Belirtilmemiş" }}</td>
+                <td
+                    class="{% if ilan.durum == 'Satıldı' or ilan.durum == 'Kiralandı' %}durum-satildi{% elif ilan.durum == 'Aktif' %}durum-aktif{% endif %}">
+                    {{ ilan.get_durum_display }}
+                </td>
+
+                <td>
+                    {% if ilan.yayindan_kaldirma_tarihi %}
+                    {{ ilan.yayindan_kaldirma_tarihi|date:"d.m.Y" }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9">Filtreleme kriterlerine uyan ilan bulunmamaktadır.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

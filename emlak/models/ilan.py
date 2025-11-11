@@ -4,6 +4,21 @@ from emlak.models.musteri import Musteri
 
 # --- SABİT SEÇENEK LİSTELERİ ---
 
+ODA_SAYISI_SECENEKLERI = [
+    ('1+0', '1+0 Stüdyo'),
+    ('1+1', '1+1'),
+    ('2+1', '2+1'),
+    ('3+1', '3+1'),
+    ('4+1', '4+1'),
+    ('5+1', '5+1 ve Üzeri'),
+    ('5+', '5 ve Üzeri Odalı'),
+    ('Acik', 'Açık Alan/Bölümsüz'),
+    ('1', '1 Bölme (Stüdyo/Tek Hacim)'),
+    ('2', '2 Bölme'),
+    ('3', '3 Bölme'),
+    ('3+', '3 ve Üzeri Böme')
+]
+
 KAT_SECENEKLERI = [
     ('-', '-')
 ]
@@ -87,7 +102,13 @@ class Ilan(models.Model):
     kaks_emsal = models.CharField(max_length=20, null=True, blank=True, verbose_name="Kaks (Emsal)")
     gabari = models.CharField(max_length=20, null=True, blank=True, verbose_name="Gabari")
     mahalle = models.CharField(max_length=100, verbose_name="Mahalle/Semt")
-    oda_sayisi = models.CharField(max_length=10, verbose_name="Oda Sayısı")
+    oda_sayisi = models.CharField(
+        max_length=10, 
+        choices=ODA_SAYISI_SECENEKLERI, 
+        null=True, 
+        blank=True, 
+        verbose_name="Oda Sayısı"
+    )
     brut_alan = models.DecimalField(max_digits=6, decimal_places=1, verbose_name="Brüt Alan (m²)")
     net_alan = models.DecimalField(max_digits=6, decimal_places=1, verbose_name="Net Alan (m²)")
     bina_yasi = models.CharField(max_length=10, choices=BINA_YASI_SECENEKLERI, verbose_name="Bina Yaşı")

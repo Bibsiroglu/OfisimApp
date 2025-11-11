@@ -1,2 +1,4 @@
 python manage.py makemigrations emlak
 python manage.py migrate
+
+python manage.py runserver
