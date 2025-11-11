@@ -42,13 +42,17 @@ EMLAK_TIPI_SECENEKLERI = [
     # Satılık Mülkler
     ('Satilik_Daire', 'Satılık Daire'), # BOŞLUK KALDIRILDI
     ('Satilik_Villa', 'Satılık Villa'), # BOŞLUK KALDIRILDI
+    ('Satilik Mustakil Ev', 'Satılık Müstakil Ev'),
     ('Satilik_Arsa', 'Satılık Arsa'),   # BOŞLUK KALDIRILDI
     ('Satilik_Isyeri', 'Satılık İşyeri'),# BOŞLUK KALDIRILDI
+    ('Devren_Satilik_Isyeri', 'Devren Satılık İş Yeri'),
     
     # Kiralık Mülkler
     ('Kiralik_Daire', 'Kiralık Daire'),
     ('Kiralik_Villa', 'Kiralık Villa'),
+    ('Kiralik_Mustakil_Ev', 'Kiralık Müstakil Ev'),
     ('Kiralik_Isyeri', 'Kiralık İşyeri'),
+    ('Devren_Kiralik_Isyeri', 'Devren Kiralık İş Yeri')
 ]
 
 BINA_YASI_SECENEKLERI = [
@@ -72,7 +76,7 @@ class Ilan(models.Model):
     mutfak = models.CharField(max_length=30, choices=MUTFAK_SECENEKLERI, default='Kapali', verbose_name="Mutfak Tipi") # Varsayılan mutfak tipi
 
     yayindan_kaldirma_tarihi = models.DateTimeField(null=True, blank=True, verbose_name="Yayından Kaldırma Tarihi")
-    emlak_tipi = models.CharField(max_length=20, choices=EMLAK_TIPI_SECENEKLERI, verbose_name="Emlak Tipi")
+    emlak_tipi = models.CharField(max_length=30, choices=EMLAK_TIPI_SECENEKLERI, verbose_name="Emlak Tipi")
     il = models.CharField(max_length=50)
     ilce = models.CharField(max_length=50)
     tam_adres = models.TextField(verbose_name="Tam Adres/Sokak/Bina No", null=True, blank=True)
