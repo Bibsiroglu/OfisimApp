@@ -48,9 +48,9 @@ MUTFAK_SECENEKLERI = [
 
 DURUM_SECENEKLERI = [
     ('Aktif','Aktif'),
-    ('Satıldı','Satıldı'),
-    ('Kiralandı','Kiralandı'),
-    ('Yayından Kaldırıldı', 'Yayından Kaldırıldı')
+    ('Satildi','Satıldı'),
+    ('Kiralandi','Kiralandı'),
+    ('Yayindan_kaldirildi', 'Yayından Kaldırıldı')
 ]
 
 EMLAK_TIPI_SECENEKLERI = [

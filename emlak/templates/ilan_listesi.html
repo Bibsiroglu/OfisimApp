@@ -82,8 +82,7 @@
                 <td>{{ ilan.il }} / {{ ilan.ilce }} ({{ ilan.get_emlak_tipi_display }})</td>
 
                 <td>
-                    {% if ilan.oda_sayisi %} {{ ilan.oda_sayisi }} {% else %} {{ ilan.bolme_sayisi|default:"-" }} {%
-                    endif %}
+                    {% if ilan.oda_sayisi %} {{ ilan.oda_sayisi }} {% endif %}
                 </td>
 
                 <td>
@@ -93,10 +92,9 @@
 
                 <td>{{ ilan.fiyat|floatformat:0|default:"Belirtilmemiş" }}</td>
                 <td
-                    class="{% if ilan.durum == 'Satıldı' or ilan.durum == 'Kiralandı' %}durum-satildi{% elif ilan.durum == 'Aktif' %}durum-aktif{% endif %}">
+                    class="{% if ilan.durum == 'satildi' or ilan.durum == 'kiralandi' %}durum-satildi{% elif ilan.durum == 'aktif' %}durum-aktif{% endif %}">
                     {{ ilan.get_durum_display }}
                 </td>
-
                 <td>
                     {% if ilan.yayindan_kaldirma_tarihi %}
                     {{ ilan.yayindan_kaldirma_tarihi|date:"d.m.Y" }}
