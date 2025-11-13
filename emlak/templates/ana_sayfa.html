@@ -9,6 +9,7 @@
     <script src="{% static 'emlak/js/chart.min.js' %}"></script>
 
     <style>
+        /* --- GENEL SIFIRLAMA VE YAPI --- */
         body {
             font-family: sans-serif;
             margin: 20px;
@@ -26,19 +27,22 @@
             padding-bottom: 10px;
         }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
-        .hatirlatici {
-            border: 1px solid #ffc107;
+        /* --- KARTLAR VE GÖRÜNÜM --- */
+        .ozet-kutu {
+            /* Temel Stil */
+            border: 1px solid #ccc;
             padding: 15px;
+            margin-bottom: 20px;
             border-radius: 5px;
-            background-color: #fff3cd;
+            background-color: #fff;
+
+            /* Dikey Flex Ayarı (Grafiğin boyutlanması için KRİTİK) */
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
         }
 
+        /* Renkler */
         .box-success {
             border-color: #28a745;
             background-color: #e6ffed;
@@ -54,36 +58,54 @@
             background-color: #f8d7da;
         }
 
-        .ozet-kutu {
-            /* Mevcut stiller */
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #fff;
-
-            /* YENİ: İçeriği dikey sırala ve esnekliği ayarla */
-            display: flex;
-            flex-direction: column;
-            /* height: 100%; /* Eğer dışarıdaki grid yüksekliği belliyse kullanılır */
+        .hatirlatici {
+            border: 1px solid #ffc107;
+            background-color: #fff3cd;
         }
 
-        /* Pasif İlanlar Kutusu için özel renk (box-info'dan alınıyor) */
-        .ozet-kutu.box-info {
-            border-color: #17a2b8;
-            background-color: #e6faff;
+        /* Ana Grid Yapısı */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
 
-        /* Canvas (Grafik Alanı) Ayarları */
-        #pasifDurumGrafik {
-            /* Grafiğin esnekliğini sağlar */
+        /* --- GRAFİK ALANLARI VE BOYUTLANDIRMA (ÇÖZÜM) --- */
+
+        /* Grafik Kapsayıcı Grid'i */
+        .grafik-alani {
+            display: grid;
+            /* 3 yerine 2 sütun kullanılarak grafiklere daha fazla alan verilir */
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+            align-items: stretch;
+        }
+
+        /* Grafik Kutularının Yüksekliğini Sınırla */
+        /* Bu, grafiklerin aşağı doğru uzamasını engeller (En kritik düzeltme) */
+        .grafik-alani .ozet-kutu {
+            height: 400px;
+            max-height: 400px;
+        }
+
+        /* Canvas Elemanı (Grafik) Boyutlandırması */
+        .grafik-alani canvas {
             flex-grow: 1;
+            /* Kalan dikey alanı kapla */
 
-            /* Maksimum yüksekliği sınırlayarak kutunun aşırı büyümesini engeller */
-            max-height: 250px;
-
-            /* Gerekirse, grafik ile metin arasına boşluk ekler */
+            /* Çözünürlük sorunlarını ve uzamayı engeller */
+            width: 100% !important;
+            height: auto !important;
             margin-top: 10px;
+        }
+
+        /* Diğer Alanlar */
+        .filter-bar {
+            /* Filtre çubuğu stilini ozet-kutu'dan ayırma */
+            margin-bottom: 30px;
+            border-color: #007bff !important;
+            background-color: #f0f8ff !important;
         }
     </style>
 </head>
@@ -140,6 +162,7 @@
                 <h2>🏠 Aktif İlanlar</h2>
                 <p>Toplam Aktif İlan Sayısı: <strong>{{ aktif_ilan_sayisi }}</strong></p>
                 <p><a href="{% url 'ilan_listesi' %}">Detaylı İlan Listesi</a></p>
+                <canvas id="aktifTipGrafik" height="300"></canvas>
             </div>
             <div class="ozet-kutu box-info">
                 <h2>📦 Pasif İlanlar</h2>
@@ -288,6 +311,50 @@
                 drawPasifDurumChart();
             } else {
                 console.error("Chart.js yüklenemedi. Statik dosya yolu kontrol edilmeli.");
+            }
+        };
+
+        const AKTIF_TIP_BASLIKLARI_STRING = '{{ aktif_tip_basliklari_json|safe }}';
+        const AKTIF_TIP_VERILERI_STRING = '{{ aktif_tip_verileri_json|safe }}';
+
+        // ... (safeParseJSON fonksiyonu burada kalır) ...
+
+        // YENİ GRAFİK ÇİZİM FONKSİYONU
+        function drawAktifTipChart() {
+            const aktifBasliklar = safeParseJSON(AKTIF_TIP_BASLIKLARI_STRING);
+            const aktifVerileri = safeParseJSON(AKTIF_TIP_VERILERI_STRING);
+            if (aktifVerileri.length === 0) return;
+
+            const ctxAktif = document.getElementById('aktifTipGrafik');
+            if (!ctxAktif) return;
+
+            new Chart(ctxAktif.getContext('2d'), {
+                type: 'bar', // Veya 'doughnut'
+                data: {
+                    labels: aktifBasliklar,
+                    datasets: [{
+                        label: 'Aktif İlan Sayısı',
+                        data: aktifVerileri,
+                        backgroundColor: '#28a745', // Yeşil
+                        borderColor: '#218838',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // window.onload fonksiyonunda çağırın:
+        window.onload = function () {
+            if (typeof Chart !== 'undefined') {
+                drawIlanRandevuChart();
+                drawPasifDurumChart();
+                drawAktifTipChart(); // <-- YENİ FONKSİYON
+            } else {
+                console.error("Chart.js yüklenemedi.");
             }
         };
     </script>

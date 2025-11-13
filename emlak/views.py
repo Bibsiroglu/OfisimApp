@@ -44,6 +44,23 @@ def ana_sayfa(request):
     pasif_durum_basliklari = [durum_cevirisi.get(item['durum'], item['durum']) for item in pasif_durum_sayilari]
     pasif_durum_verileri = [item['sayi'] for item in pasif_durum_sayilari]
 
+    aktif_tip_sayilari = Ilan.objects.filter(durum='Aktif').values('emlak_tipi').annotate(sayi=Count('emlak_tipi')).order_by('-sayi')
+
+    # Emlak tipi seçeneklerinden Türkçe isimleri almak için sözlük oluşturulur
+    tip_cevirisi = dict(Ilan._meta.get_field('emlak_tipi').choices)
+
+    aktif_tip_basliklari = []
+    aktif_tip_verileri = []
+
+    for item in aktif_tip_sayilari:
+        turkce_baslik = tip_cevirisi.get(item['emlak_tipi'], item['emlak_tipi'])
+        aktif_tip_basliklari.append(turkce_baslik)
+        aktif_tip_verileri.append(item['sayi'])
+
+    # JSON formatına çevirme
+    aktif_tip_basliklari_json = json.dumps(aktif_tip_basliklari)
+    aktif_tip_verileri_json = json.dumps(aktif_tip_verileri)
+
     # Randevu ve Sözleşme Takibi
     bugunun_randevulari = Randevu.objects.filter(
         tarih_saat__date=bugun, 
@@ -85,6 +102,8 @@ def ana_sayfa(request):
     context = {
         'pasif_durum_basliklari_json': json.dumps(pasif_durum_basliklari),
         'pasif_durum_verileri_json': json.dumps(pasif_durum_verileri),
+        'aktif_tip_basliklari_json': aktif_tip_basliklari_json,
+        'aktif_tip_verileri_json': aktif_tip_verileri_json,
         'aktif_ilan_sayisi': aktif_ilan_sayisi,
         'pasif_ilan_sayisi': pasif_ilan_sayisi,
         'toplam_musteri_sayisi': toplam_musteri_sayisi,
