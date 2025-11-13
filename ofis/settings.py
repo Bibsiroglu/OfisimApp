@@ -121,7 +121,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     # Projenizin ana klasöründe ek statik dosyalarınız varsa buraya eklenir
-    # BASE_DIR / "static", 
+    BASE_DIR / "static", 
 ]
 
 # Default primary key field type

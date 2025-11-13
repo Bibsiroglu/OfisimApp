@@ -1,47 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="tr">
-<script>
-    // JSON verilerini çekme
-    const ILAN_BASLIKLARI_STRING = "{{ ilan_grafigi_basliklari_json|safe }}";
-    const ILAN_VERILERI_STRING = "{{ ilan_grafigi_verileri_json }}";
-    // static/js/dosyanız veya ana_sayfa.html script bloğu içinde
-
-    function drawIlanRandevuChart() {
-
-        // 1. String verileri al
-        const ILAN_BASLIKLARI_STRING = "{{ ilan_grafigi_basliklari_json|safe }}";
-        const ILAN_VERILERI_STRING = "{{ ilan_grafigi_verileri_json }}";
-
-        // 2. JSON.parse ile JavaScript dizisine/nesnesine dönüştür
-        let ilanBasliklari;
-        let ilanVerileri;
-
-        try {
-            ilanBasliklari = JSON.parse(ILAN_BASLIKLARI_STRING.replace(/&quot;/g, '"'));
-            ilanVerileri = JSON.parse(ILAN_VERILERI_STRING);
-        } catch (e) {
-            console.error("Grafik verileri işlenemedi:", e);
-            return;
-        }
-
-        // 3. Dönüştürülmüş veriyi Chart.js'e aktar
-        new Chart(ilanCtx, {
-            type: 'bar',
-            data: {
-                labels: ilanBasliklari, // Çözümlenmiş JavaScript Dizisi
-                datasets: [{
-                    data: ilanVerileri, // Çözümlenmiş JavaScript Dizisi
-                    // ...
-                }]
-            },
-            // ...
-        });
-    }
-</script>
 
 <head>
     <meta charset="UTF-8">
     <title>OfisimApp - Ana Sayfa (Dashboard)</title>
+
+    <script src="{% static 'emlak/js/chart.min.js' %}"></script>
+
     <style>
         body {
             font-family: sans-serif;
@@ -60,14 +26,6 @@
             padding-bottom: 10px;
         }
 
-        .ozet-kutu {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -81,7 +39,6 @@
             background-color: #fff3cd;
         }
 
-        /* Yeni Renkler */
         .box-success {
             border-color: #28a745;
             background-color: #e6ffed;
@@ -95,6 +52,38 @@
         .box-danger {
             border-color: #dc3545;
             background-color: #f8d7da;
+        }
+
+        .ozet-kutu {
+            /* Mevcut stiller */
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+
+            /* YENİ: İçeriği dikey sırala ve esnekliği ayarla */
+            display: flex;
+            flex-direction: column;
+            /* height: 100%; /* Eğer dışarıdaki grid yüksekliği belliyse kullanılır */
+        }
+
+        /* Pasif İlanlar Kutusu için özel renk (box-info'dan alınıyor) */
+        .ozet-kutu.box-info {
+            border-color: #17a2b8;
+            background-color: #e6faff;
+        }
+
+        /* Canvas (Grafik Alanı) Ayarları */
+        #pasifDurumGrafik {
+            /* Grafiğin esnekliğini sağlar */
+            flex-grow: 1;
+
+            /* Maksimum yüksekliği sınırlayarak kutunun aşırı büyümesini engeller */
+            max-height: 250px;
+
+            /* Gerekirse, grafik ile metin arasına boşluk ekler */
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -134,7 +123,6 @@
 
                 <select name="emlak_tipi" class="form-control" style="padding: 5px; border: 1px solid #007bff;">
                     <option value="">Emlak Tipi (Tümü)</option>
-
                     {% for value, label in emlak_tipi_secenekleri %}
                     <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
@@ -153,13 +141,12 @@
                 <p>Toplam Aktif İlan Sayısı: <strong>{{ aktif_ilan_sayisi }}</strong></p>
                 <p><a href="{% url 'ilan_listesi' %}">Detaylı İlan Listesi</a></p>
             </div>
-
             <div class="ozet-kutu box-info">
                 <h2>📦 Pasif İlanlar</h2>
                 <p>Toplam Pasif İlan Sayısı: <strong>{{ pasif_ilan_sayisi }}</strong></p>
                 <p style="font-size: 0.9em; color: #17a2b8;">(Satıldı, Kiralandı, Kaldırıldı)</p>
+                <canvas id="pasifDurumGrafik" height="300"></canvas>
             </div>
-
             <div class="ozet-kutu">
                 <h2>👤 Müşteriler (CRM)</h2>
                 <p>Toplam Müşteri Sayısı: <strong>{{ toplam_musteri_sayisi }}</strong></p>
@@ -205,8 +192,105 @@
                 {% endif %}
             </div>
         </div>
+
+        <div class="grafik-alani">
+            <div class="ozet-kutu">
+                <h2>📈 En Çok Randevu Alan İlanlar</h2>
+                <canvas id="ilanRandevuGrafik" height="300"></canvas>
+            </div>
+        </div>
     </div>
 
+    <script>
+        // CRITICAL FIX: Django değişkenleri tek tırnaklar arasına alınmıştır.
+        const ILAN_BASLIKLARI_STRING = '{{ ilan_grafigi_basliklari_json|safe }}';
+        const ILAN_VERILERI_STRING = '{{ ilan_grafigi_verileri_json|safe }}';
+
+        const PASIF_BASLIKLAR_STRING = '{{ pasif_durum_basliklari_json|safe }}';
+        const PASIF_VERILERI_STRING = '{{ pasif_durum_verileri_json|safe }}';
+
+        // Güvenli JSON ayrıştırma fonksiyonu
+        function safeParseJSON(jsonString) {
+            if (!jsonString) return [];
+            try {
+                let cleanedString = jsonString
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/\\"/g, '"');
+                if (!cleanedString.trim() || cleanedString.trim() === '[]') return [];
+                return JSON.parse(cleanedString);
+            } catch (e) {
+                console.error("JSON ayrıştırma hatası! Hatalı String:", jsonString);
+                return [];
+            }
+        }
+
+        // --- GRAFİK 1: Randevu Performansı Çizimi ---
+        function drawIlanRandevuChart() {
+            const ilanBasliklari = safeParseJSON(ILAN_BASLIKLARI_STRING);
+            const ilanVerileri = safeParseJSON(ILAN_VERILERI_STRING);
+            if (ilanVerileri.length === 0) return;
+
+            const ilanCtx = document.getElementById('ilanRandevuGrafik');
+            if (!ilanCtx) return;
+
+            new Chart(ilanCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ilanBasliklari,
+                    datasets: [{
+                        label: 'Randevu Sayısı',
+                        data: ilanVerileri,
+                        backgroundColor: '#007bff',
+                        borderColor: '#0056b3',
+                        borderWidth: 1
+                    }]
+                },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // --- GRAFİK 2: Pasif Durum Dağılımı Çizimi ---
+        function drawPasifDurumChart() {
+            const pasifBasliklar = safeParseJSON(PASIF_BASLIKLAR_STRING);
+            const pasifVerileri = safeParseJSON(PASIF_VERILERI_STRING);
+            if (pasifVerileri.length === 0) return;
+
+            const colors = {
+                'Satıldı': '#dc3545',
+                'Kiralandı': '#ffc107',
+                'Yayından Kaldırıldı': '#6c757d',
+                'Diğer': '#17a2b8'
+            };
+            const backgroundColors = pasifBasliklar.map(label => colors[label] || colors['Diğer']);
+
+            const ctxPasif = document.getElementById('pasifDurumGrafik');
+            if (!ctxPasif) return;
+
+            new Chart(ctxPasif.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: pasifBasliklar,
+                    datasets: [{
+                        data: pasifVerileri,
+                        backgroundColor: backgroundColors,
+                        hoverOffset: 4
+                    }]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        }
+
+        window.onload = function () {
+            // Chart.js'in yüklenip yüklenmediğini kontrol eder
+            if (typeof Chart !== 'undefined') {
+                drawIlanRandevuChart();
+                drawPasifDurumChart();
+            } else {
+                console.error("Chart.js yüklenemedi. Statik dosya yolu kontrol edilmeli.");
+            }
+        };
+    </script>
 </body>
 
 </html>

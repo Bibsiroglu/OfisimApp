@@ -35,6 +35,15 @@ def ana_sayfa(request):
     toplam_musteri_sayisi = Musteri.objects.count()
     son_30_gun_yeni_musteri_sayisi = Musteri.objects.filter(kayit_tarihi__gte=otuz_gun_once).count()
     
+    pasif_durum_sayilari = Ilan.objects.filter(
+        durum__in=['Satildi', 'Kiralandi', 'Yayindan_kaldirildi']
+    ).values('durum').annotate(sayi=Count('durum')).order_by('durum')
+
+    durum_cevirisi = dict(Ilan._meta.get_field('durum').choices)
+
+    pasif_durum_basliklari = [durum_cevirisi.get(item['durum'], item['durum']) for item in pasif_durum_sayilari]
+    pasif_durum_verileri = [item['sayi'] for item in pasif_durum_sayilari]
+
     # Randevu ve Sözleşme Takibi
     bugunun_randevulari = Randevu.objects.filter(
         tarih_saat__date=bugun, 
@@ -74,6 +83,8 @@ def ana_sayfa(request):
     # CONTEXT TANIMLAMASI (Tüm veriler burada birleştirilir)
     # ------------------------------------------------------------------
     context = {
+        'pasif_durum_basliklari_json': json.dumps(pasif_durum_basliklari),
+        'pasif_durum_verileri_json': json.dumps(pasif_durum_verileri),
         'aktif_ilan_sayisi': aktif_ilan_sayisi,
         'pasif_ilan_sayisi': pasif_ilan_sayisi,
         'toplam_musteri_sayisi': toplam_musteri_sayisi,
