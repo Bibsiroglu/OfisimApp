@@ -27,21 +27,6 @@
             padding-bottom: 10px;
         }
 
-        /* --- KARTLAR VE GÖRÜNÜM --- */
-        .ozet-kutu {
-            /* Temel Stil */
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #fff;
-
-            /* Dikey Flex Ayarı (Grafiğin boyutlanması için KRİTİK) */
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-        }
-
         /* Renkler */
         .box-success {
             border-color: #28a745;
@@ -70,39 +55,67 @@
             gap: 20px;
         }
 
-        /* --- GRAFİK ALANLARI VE BOYUTLANDIRMA (ÇÖZÜM) --- */
-
-        /* Grafik Kapsayıcı Grid'i */
         .grafik-alani {
             display: grid;
-            /* 3 yerine 2 sütun kullanılarak grafiklere daha fazla alan verilir */
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-top: 20px;
-            align-items: stretch;
         }
 
-        /* Grafik Kutularının Yüksekliğini Sınırla */
-        /* Bu, grafiklerin aşağı doğru uzamasını engeller (En kritik düzeltme) */
-        .grafik-alani .ozet-kutu {
+        /* --- KARTLAR VE İÇERİK DÜZENİ --- */
+        .ozet-kutu {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+
+            /* Flexbox: İçeriği yukarıdan aşağıya sırala */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Yatayda ortalama */
+            text-align: center;
+            overflow: hidden;
+            /* Taşmayı engelle */
+
+            /* Grafiksiz kutular için varsayılan yükseklik */
+            height: auto;
+            max-height: 250px;
+        }
+
+        /* GRAFİK İÇEREN KUTULAR İÇİN SABİT YÜKSEKLİK */
+        .ozet-kutu.chart-card {
+            /* chart-card sınıfı artık burada hedef alınıyor */
             height: 400px;
+            /* Grafik içeren kutular için sabit yükseklik */
             max-height: 400px;
         }
 
-        /* Canvas Elemanı (Grafik) Boyutlandırması */
-        .grafik-alani canvas {
+        /* GRAFİK SARMAYICISI (CHART-WRAPPER) */
+        .chart-wrapper {
             flex-grow: 1;
-            /* Kalan dikey alanı kapla */
-
-            /* Çözünürlük sorunlarını ve uzamayı engeller */
-            width: 100% !important;
-            height: auto !important;
+            /* Metin alanından sonra kalan tüm dikey alanı kapla */
+            width: 100%;
+            position: relative;
+            /* Canvas'ın absolute position'ı için gereklidir */
             margin-top: 10px;
+            /* Metin ile grafik arasında boşluk */
         }
 
-        /* Diğer Alanlar */
+        /* Canvas Elemanı (Grafik) Boyutlandırması */
+        .ozet-kutu .chart-wrapper canvas {
+            position: absolute;
+            /* Kapsayıcının %100'ünü kullanır */
+            width: 100% !important;
+            height: 100% !important;
+            top: 0;
+            left: 0;
+            margin: auto;
+            display: block;
+        }
+
         .filter-bar {
-            /* Filtre çubuğu stilini ozet-kutu'dan ayırma */
             margin-bottom: 30px;
             border-color: #007bff !important;
             background-color: #f0f8ff !important;
@@ -158,18 +171,26 @@
         </div>
 
         <div class="grid-container">
-            <div class="ozet-kutu box-success">
+            <div class="ozet-kutu box-success chart-card">
                 <h2>🏠 Aktif İlanlar</h2>
                 <p>Toplam Aktif İlan Sayısı: <strong>{{ aktif_ilan_sayisi }}</strong></p>
                 <p><a href="{% url 'ilan_listesi' %}">Detaylı İlan Listesi</a></p>
-                <canvas id="aktifTipGrafik" height="300"></canvas>
+
+                <div class="chart-wrapper">
+                    <canvas id="aktifTipGrafik"></canvas>
+                </div>
             </div>
-            <div class="ozet-kutu box-info">
+
+            <div class="ozet-kutu box-info chart-card">
                 <h2>📦 Pasif İlanlar</h2>
                 <p>Toplam Pasif İlan Sayısı: <strong>{{ pasif_ilan_sayisi }}</strong></p>
                 <p style="font-size: 0.9em; color: #17a2b8;">(Satıldı, Kiralandı, Kaldırıldı)</p>
-                <canvas id="pasifDurumGrafik" height="300"></canvas>
+
+                <div class="chart-wrapper">
+                    <canvas id="pasifDurumGrafik"></canvas>
+                </div>
             </div>
+
             <div class="ozet-kutu">
                 <h2>👤 Müşteriler (CRM)</h2>
                 <p>Toplam Müşteri Sayısı: <strong>{{ toplam_musteri_sayisi }}</strong></p>
@@ -178,186 +199,150 @@
                 <p><a href="{% url 'musteri_listesi' %}">Detaylı Müşteri Listesi</a></p>
             </div>
 
-            <div class="ozet-kutu hatirlatici" style="grid-column: span 2;">
-                <h2>🗓️ Bugünün Randevuları ({{ bugunun_randevulari.count }})</h2>
-                {% if bugunun_randevulari %}
-                <ul>
-                    {% for randevu in bugunun_randevulari %}
-                    <li>
-                        <strong>{{ randevu.tarih_saat|date:"H:i" }}</strong> - Müşteri:
-                        <a href="{% url 'musteri_detay' pk=randevu.ilgili_musteri.pk %}">{{
-                            randevu.ilgili_musteri.ad_soyad }}</a>
-                        {% if randevu.ilan %} (İlan: <a href="{% url 'ilan_detay' pk=randevu.ilan.pk %}">{{
-                            randevu.ilan.ilan_no }}</a>) {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p>Bugün için planlanmış randevu yok. 🎉</p>
-                {% endif %}
-            </div>
-
-            <div class="ozet-kutu box-danger">
-                <h2>🚨 Yaklaşan Sözleşme Bitişleri</h2>
-                {% if yaklasan_sozlesmeler %}
-                <p style="color: red;"><strong>{{ yaklasan_sozlesmeler.count }}</strong> sözleşmenin süresi yaklaşıyor!
-                </p>
-                <ul>
-                    {% for sozlesme in yaklasan_sozlesmeler %}
-                    <li>
-                        <strong>{{ sozlesme.bitis_tarihi|date:"d.m.Y" }}</strong> - {{
-                        sozlesme.get_sozlesme_tipi_display }} No: {{ sozlesme.sozlesme_no }}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p>Önümüzdeki 30 gün içinde süresi dolacak aktif sözleşme yok. ✅</p>
-                {% endif %}
+            <div class="grafik-alani" style="grid-template-columns: repeat(1, 1fr);">
+                <div class="ozet-kutu chart-card">
+                    <h2>📈 En Çok Randevu Alan İlanlar</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="ilanRandevuGrafik"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="grafik-alani">
-            <div class="ozet-kutu">
-                <h2>📈 En Çok Randevu Alan İlanlar</h2>
-                <canvas id="ilanRandevuGrafik" height="300"></canvas>
-            </div>
-        </div>
-    </div>
+        <script>
+            // CRITICAL FIX: Django değişkenleri tek tırnaklar arasına alınmıştır.
+            const ILAN_BASLIKLARI_STRING = '{{ ilan_grafigi_basliklari_json|safe }}';
+            const ILAN_VERILERI_STRING = '{{ ilan_grafigi_verileri_json|safe }}';
 
-    <script>
-        // CRITICAL FIX: Django değişkenleri tek tırnaklar arasına alınmıştır.
-        const ILAN_BASLIKLARI_STRING = '{{ ilan_grafigi_basliklari_json|safe }}';
-        const ILAN_VERILERI_STRING = '{{ ilan_grafigi_verileri_json|safe }}';
+            const PASIF_BASLIKLAR_STRING = '{{ pasif_durum_basliklari_json|safe }}';
+            const PASIF_VERILERI_STRING = '{{ pasif_durum_verileri_json|safe }}';
 
-        const PASIF_BASLIKLAR_STRING = '{{ pasif_durum_basliklari_json|safe }}';
-        const PASIF_VERILERI_STRING = '{{ pasif_durum_verileri_json|safe }}';
-
-        // Güvenli JSON ayrıştırma fonksiyonu
-        function safeParseJSON(jsonString) {
-            if (!jsonString) return [];
-            try {
-                let cleanedString = jsonString
-                    .replace(/&quot;/g, '"')
-                    .replace(/&#39;/g, "'")
-                    .replace(/\\"/g, '"');
-                if (!cleanedString.trim() || cleanedString.trim() === '[]') return [];
-                return JSON.parse(cleanedString);
-            } catch (e) {
-                console.error("JSON ayrıştırma hatası! Hatalı String:", jsonString);
-                return [];
-            }
-        }
-
-        // --- GRAFİK 1: Randevu Performansı Çizimi ---
-        function drawIlanRandevuChart() {
-            const ilanBasliklari = safeParseJSON(ILAN_BASLIKLARI_STRING);
-            const ilanVerileri = safeParseJSON(ILAN_VERILERI_STRING);
-            if (ilanVerileri.length === 0) return;
-
-            const ilanCtx = document.getElementById('ilanRandevuGrafik');
-            if (!ilanCtx) return;
-
-            new Chart(ilanCtx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ilanBasliklari,
-                    datasets: [{
-                        label: 'Randevu Sayısı',
-                        data: ilanVerileri,
-                        backgroundColor: '#007bff',
-                        borderColor: '#0056b3',
-                        borderWidth: 1
-                    }]
-                },
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        // --- GRAFİK 2: Pasif Durum Dağılımı Çizimi ---
-        function drawPasifDurumChart() {
-            const pasifBasliklar = safeParseJSON(PASIF_BASLIKLAR_STRING);
-            const pasifVerileri = safeParseJSON(PASIF_VERILERI_STRING);
-            if (pasifVerileri.length === 0) return;
-
-            const colors = {
-                'Satıldı': '#dc3545',
-                'Kiralandı': '#ffc107',
-                'Yayından Kaldırıldı': '#6c757d',
-                'Diğer': '#17a2b8'
-            };
-            const backgroundColors = pasifBasliklar.map(label => colors[label] || colors['Diğer']);
-
-            const ctxPasif = document.getElementById('pasifDurumGrafik');
-            if (!ctxPasif) return;
-
-            new Chart(ctxPasif.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: pasifBasliklar,
-                    datasets: [{
-                        data: pasifVerileri,
-                        backgroundColor: backgroundColors,
-                        hoverOffset: 4
-                    }]
-                },
-                options: { maintainAspectRatio: false }
-            });
-        }
-
-        window.onload = function () {
-            // Chart.js'in yüklenip yüklenmediğini kontrol eder
-            if (typeof Chart !== 'undefined') {
-                drawIlanRandevuChart();
-                drawPasifDurumChart();
-            } else {
-                console.error("Chart.js yüklenemedi. Statik dosya yolu kontrol edilmeli.");
-            }
-        };
-
-        const AKTIF_TIP_BASLIKLARI_STRING = '{{ aktif_tip_basliklari_json|safe }}';
-        const AKTIF_TIP_VERILERI_STRING = '{{ aktif_tip_verileri_json|safe }}';
-
-        // ... (safeParseJSON fonksiyonu burada kalır) ...
-
-        // YENİ GRAFİK ÇİZİM FONKSİYONU
-        function drawAktifTipChart() {
-            const aktifBasliklar = safeParseJSON(AKTIF_TIP_BASLIKLARI_STRING);
-            const aktifVerileri = safeParseJSON(AKTIF_TIP_VERILERI_STRING);
-            if (aktifVerileri.length === 0) return;
-
-            const ctxAktif = document.getElementById('aktifTipGrafik');
-            if (!ctxAktif) return;
-
-            new Chart(ctxAktif.getContext('2d'), {
-                type: 'bar', // Veya 'doughnut'
-                data: {
-                    labels: aktifBasliklar,
-                    datasets: [{
-                        label: 'Aktif İlan Sayısı',
-                        data: aktifVerileri,
-                        backgroundColor: '#28a745', // Yeşil
-                        borderColor: '#218838',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
+            // Güvenli JSON ayrıştırma fonksiyonu
+            function safeParseJSON(jsonString) {
+                if (!jsonString) return [];
+                try {
+                    let cleanedString = jsonString
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/\\"/g, '"');
+                    if (!cleanedString.trim() || cleanedString.trim() === '[]') return [];
+                    return JSON.parse(cleanedString);
+                } catch (e) {
+                    console.error("JSON ayrıştırma hatası! Hatalı String:", jsonString);
+                    return [];
                 }
-            });
-        }
-
-        // window.onload fonksiyonunda çağırın:
-        window.onload = function () {
-            if (typeof Chart !== 'undefined') {
-                drawIlanRandevuChart();
-                drawPasifDurumChart();
-                drawAktifTipChart(); // <-- YENİ FONKSİYON
-            } else {
-                console.error("Chart.js yüklenemedi.");
             }
-        };
-    </script>
+
+            // --- GRAFİK 1: Randevu Performansı Çizimi ---
+            function drawIlanRandevuChart() {
+                const ilanBasliklari = safeParseJSON(ILAN_BASLIKLARI_STRING);
+                const ilanVerileri = safeParseJSON(ILAN_VERILERI_STRING);
+                if (ilanVerileri.length === 0) return;
+
+                const ilanCtx = document.getElementById('ilanRandevuGrafik');
+                if (!ilanCtx) return;
+
+                new Chart(ilanCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ilanBasliklari,
+                        datasets: [{
+                            label: 'Randevu Sayısı',
+                            data: ilanVerileri,
+                            backgroundColor: '#007bff',
+                            borderColor: '#0056b3',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
+            // --- GRAFİK 2: Pasif Durum Dağılımı Çizimi ---
+            function drawPasifDurumChart() {
+                const pasifBasliklar = safeParseJSON(PASIF_BASLIKLAR_STRING);
+                const pasifVerileri = safeParseJSON(PASIF_VERILERI_STRING);
+                if (pasifVerileri.length === 0) return;
+
+                const colors = {
+                    'Satıldı': '#dc3545',
+                    'Kiralandı': '#ffc107',
+                    'Yayından Kaldırıldı': '#6c757d',
+                    'Diğer': '#17a2b8'
+                };
+                const backgroundColors = pasifBasliklar.map(label => colors[label] || colors['Diğer']);
+
+                const ctxPasif = document.getElementById('pasifDurumGrafik');
+                if (!ctxPasif) return;
+
+                new Chart(ctxPasif.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: pasifBasliklar,
+                        datasets: [{
+                            data: pasifVerileri,
+                            backgroundColor: backgroundColors,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { maintainAspectRatio: false }
+                });
+            }
+
+            window.onload = function () {
+                // Chart.js'in yüklenip yüklenmediğini kontrol eder
+                if (typeof Chart !== 'undefined') {
+                    drawIlanRandevuChart();
+                    drawPasifDurumChart();
+                } else {
+                    console.error("Chart.js yüklenemedi. Statik dosya yolu kontrol edilmeli.");
+                }
+            };
+
+            const AKTIF_TIP_BASLIKLARI_STRING = '{{ aktif_tip_basliklari_json|safe }}';
+            const AKTIF_TIP_VERILERI_STRING = '{{ aktif_tip_verileri_json|safe }}';
+
+            // ... (safeParseJSON fonksiyonu burada kalır) ...
+
+            // YENİ GRAFİK ÇİZİM FONKSİYONU
+            function drawAktifTipChart() {
+                const aktifBasliklar = safeParseJSON(AKTIF_TIP_BASLIKLARI_STRING);
+                const aktifVerileri = safeParseJSON(AKTIF_TIP_VERILERI_STRING);
+                if (aktifVerileri.length === 0) return;
+
+                const ctxAktif = document.getElementById('aktifTipGrafik');
+                if (!ctxAktif) return;
+
+                new Chart(ctxAktif.getContext('2d'), {
+                    type: 'bar', // Veya 'doughnut'
+                    data: {
+                        labels: aktifBasliklar,
+                        datasets: [{
+                            label: 'Aktif İlan Sayısı',
+                            data: aktifVerileri,
+                            backgroundColor: '#28a745', // Yeşil
+                            borderColor: '#218838',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // window.onload fonksiyonunda çağırın:
+            window.onload = function () {
+                if (typeof Chart !== 'undefined') {
+                    drawIlanRandevuChart();
+                    drawPasifDurumChart();
+                    drawAktifTipChart(); // <-- YENİ FONKSİYON
+                } else {
+                    console.error("Chart.js yüklenemedi.");
+                }
+            };
+        </script>
 </body>
 
 </html>
