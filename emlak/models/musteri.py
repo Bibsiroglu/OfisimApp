@@ -15,11 +15,37 @@ class Musteri(models.Model):
     
     ad_soyad = models.CharField(max_length=100)
     telefon = models.CharField(max_length=15, unique=True)
-    email = models.EmailField(blank=True, null=True)
     talep_ozeti = models.TextField(verbose_name="Talep Özeti")
     rol = models.CharField(max_length=20, choices=ROL_SECENEKLERI, default='Genel', verbose_name="Müşteri Rolü")
     kayit_tarihi = models.DateTimeField(auto_now_add=True)
     olusturulma_tarihi = models.DateTimeField(default=timezone.now, verbose_name="Oluşturulma Tarihi")
+    tc_kimlik = models.CharField(
+        max_length=11, 
+        unique=True, 
+        blank=True, 
+        null=True, 
+        verbose_name="T.C. Kimlik No"
+    )
+
+    ikametgah_adresi = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="İkametgah Adresi"
+    )
+
+    banka_adi = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name="Banka Adı"
+    )
+    
+    iban_no = models.CharField( # IBAN doğru max_length ile tanımlanmalı
+        max_length=34, 
+        blank=True, 
+        null=True, 
+        verbose_name="IBAN Numarası"
+    )
     
     # ----------------------------------------------------
     # KRİTİK DÜZELTME: Bu metodun sınıf içinde, girintili olması gerekir!

@@ -75,9 +75,15 @@ class IlanAdmin(admin.ModelAdmin):
     
 # --- 2. MÜŞTERİ YÖNETİMİ ---
 class MusteriAdmin(admin.ModelAdmin):
-    list_display = ('ad_soyad', 'telefon', 'rol', 'email', 'kayit_tarihi')
-    search_fields = ('ad_soyad', 'telefon', 'email')
+    list_display = ('id', 'ad_soyad', 'telefon', 'tc_kimlik', 'kayit_tarihi')
+    search_fields = ('ad_soyad', 'telefon')
     list_filter = ('rol', 'kayit_tarihi') 
+    
+    fieldsets = (
+        ('Kişisel Bilgiler', {'fields': ('ad_soyad', 'telefon', 'tc_kimlik')}),
+        ('Adres ve Talep', {'fields': ('ikametgah_adresi', 'talep_ozeti')}),
+        ('Finansal Bilgiler', {'fields': ('banka_adi', 'iban_no')}),
+    )
 
 # --- 3. RANDEVU YÖNETİMİ ---
 class RandevuAdmin(admin.ModelAdmin):
